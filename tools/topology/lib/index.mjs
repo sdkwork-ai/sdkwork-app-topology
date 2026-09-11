@@ -17,6 +17,12 @@ export {
 } from './runtime.mjs';
 
 export {
+  ARCHETYPES,
+  DEPLOYMENT_PROFILES,
+  REQUIRED_SURFACES_BY_ARCHETYPE,
+} from './spec-v5.mjs';
+
+export {
   applyDevelopmentLocalGatewayBinding,
   LOCAL_PLATFORM_API_GATEWAY_HTTP_URL_KEY,
   BROWSER_LOCAL_PLATFORM_API_GATEWAY_HTTP_URL_KEY,

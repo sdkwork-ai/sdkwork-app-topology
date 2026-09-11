@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 5,
+  "kind": "sdkwork.app.topology",
+  "appId": "sdkwork-mall",
+  "applicationCode": "mall",
+  "archetype": "application-client-root",
+  "archetypeNotes": "No owned HTTP public-ingress; nginx webserver profile remains disabled.",
+  "cloudPublicHosts": {
+    "platform.api-gateway": {
+      "httpHost": "api.sdkwork.com"
+    }
+  },
+  "vocabulary": {
+    "deploymentProfile": {
+      "allowed": [
+        "standalone",
+        "cloud"
+      ]
+    },
+    "environment": {
+      "allowed": [
+        "development",
+        "production"
+      ]
+    }
+  },
+  "profilePattern": "{deploymentProfile}.{environment}.env",
+  "envKeys": {
+    "apiGatewayBaseUrl": "SDKWORK_MALL_PLATFORM_API_GATEWAY_HTTP_URL",
+    "clientApiGatewayBaseUrl": "VITE_SDKWORK_MALL_PLATFORM_API_GATEWAY_HTTP_URL"
+  },
+  "defaults": {
+    "productionProfileId": "cloud.production",
+    "developmentProfileId": "standalone.development",
+    "desktopBuildProfileId": "cloud.production"
+  },
+  "surfaces": {
+    "platform.api-gateway": {
+      "connectivityPlane": "platform",
+      "protocols": [
+        "http"
+      ],
+      "httpUrlEnv": "SDKWORK_MALL_PLATFORM_API_GATEWAY_HTTP_URL",
+      "clientHttpEnv": "VITE_SDKWORK_MALL_PLATFORM_API_GATEWAY_HTTP_URL"
+    }
+  },
+  "components": {},
+  "profileFiles": {
+    "standalone.development": "examples/sdkwork-mall/etc/topology/standalone.development.env",
+    "standalone.production": "examples/sdkwork-mall/etc/topology/standalone.production.env",
+    "cloud.development": "examples/sdkwork-mall/etc/topology/cloud.development.env",
+    "cloud.production": "examples/sdkwork-mall/etc/topology/cloud.production.env"
+  },
+  "orchestration": {
+    "profiles": {
+      "standalone.development": {
+        "processes": []
+      },
+      "cloud.development": {
+        "processes": [],
+        "healthSurfaces": [
+          "platform.api-gateway"
+        ]
+      }
+    }
+  }
+}

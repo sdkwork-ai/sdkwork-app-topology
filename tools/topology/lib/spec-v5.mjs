@@ -8,6 +8,47 @@ export const PROCESS_ROLES = Object.freeze([
   'edge-runtime', 'database', 'redis', 'migration', 'seed', 'worker', 'tunnel',
 ]);
 
+// The deployment-profile vocabulary, in canonical declaration order.
+export const DEPLOYMENT_PROFILES = Object.freeze(['standalone', 'cloud']);
+
+// Archetype is the topology shape an application declares for itself, and it is
+// what decides which surfaces that application must declare. Schema v2 carried
+// the same table (`REQUIRED_SURFACES_BY_ARCHETYPE` in spec-v2.mjs); the schema v5
+// rewrite dropped it and required `application.public-ingress` plus
+// `platform.api-gateway` unconditionally, which is wrong for an application that
+// owns no ingress at all. Restore the archetype-driven rule instead of demanding
+// surfaces an application does not have (APP_RUNTIME_TOPOLOGY_SPEC.md section 4).
+export const ARCHETYPES = Object.freeze([
+  'application-http-gateway',
+  'realtime-application-platform',
+  'application-rest-edge-device',
+  'application-client-root',
+]);
+
+export const REQUIRED_SURFACES_BY_ARCHETYPE = Object.freeze({
+  // Owns the application ingress. It may consume the platform gateway as a
+  // remote dependency surface, but a standalone-only application is not
+  // required to declare one.
+  'application-http-gateway': Object.freeze(['application.public-ingress']),
+  // Terminates application HTTP and realtime on its own ingress and also talks
+  // to the deployed platform gateway.
+  'realtime-application-platform': Object.freeze([
+    'application.public-ingress', 'platform.api-gateway',
+  ]),
+  // Edge device fleet: the application HTTP surface, the device ingress, and the
+  // platform gateway it reports through.
+  'application-rest-edge-device': Object.freeze([
+    'application.app-http', 'edge.device-ingress', 'platform.api-gateway',
+  ]),
+  // Browser-only client root: it ships no owned application ingress (its nginx
+  // webserver profile stays disabled) and consumes the platform gateway. It
+  // therefore starts no standalone gateway process of its own.
+  'application-client-root': Object.freeze(['platform.api-gateway']),
+});
+
+// Unknown archetypes keep the historical default: an application ingress.
+const DEFAULT_REQUIRED_SURFACES = Object.freeze(['application.public-ingress']);
+
 export const RUNTIME_TARGETS = Object.freeze([
   'browser', 'desktop', 'tablet-ipados', 'tablet-android',
   'capacitor-ios', 'capacitor-android', 'flutter-ios', 'flutter-android',
@@ -44,10 +85,27 @@ export function validateTopologySpecV5(spec, specPath = 'topology.spec.json') {
       'legacy snake_case (e.g. api_gateway) is tolerated during migration only',
     );
   }
+  if (!ARCHETYPES.includes(spec.archetype)) {
+    throw new Error(`${specPath} archetype must be one of: ${ARCHETYPES.join(', ')}`);
+  }
+  // APP_MANIFEST_SPEC.md: `runtime.supportedDeploymentProfiles` MUST be non-empty
+  // and every value MUST be `standalone` or `cloud`, and a profile-limited surface
+  // manifest may declare only the profile it is permitted to ship. The topology
+  // vocabulary mirrors that manifest, so it is a non-empty subset in canonical
+  // order -- not always both profiles.
   const profiles = spec.vocabulary?.deploymentProfile?.allowed;
-  if (!Array.isArray(profiles) || profiles.length !== 2
-    || profiles[0] !== 'standalone' || profiles[1] !== 'cloud') {
-    throw new Error(`${specPath} vocabulary.deploymentProfile.allowed must be standalone, cloud`);
+  const knownProfiles = Array.isArray(profiles)
+    && profiles.length > 0
+    && new Set(profiles).size === profiles.length
+    && profiles.every((profile) => DEPLOYMENT_PROFILES.includes(profile));
+  const canonicalProfiles = knownProfiles
+    ? DEPLOYMENT_PROFILES.filter((profile) => profiles.includes(profile))
+    : [];
+  if (!knownProfiles || canonicalProfiles.join(',') !== profiles.join(',')) {
+    throw new Error(
+      `${specPath} vocabulary.deploymentProfile.allowed must be a non-empty subset of `
+      + `${DEPLOYMENT_PROFILES.join(', ')} in canonical order`,
+    );
   }
   if (spec.vocabulary?.hosting || spec.vocabulary?.serviceLayout) {
     throw new Error(`${specPath} hosting/serviceLayout vocabulary is retired in schema v5`);
@@ -75,8 +133,11 @@ export function validateTopologySpecV5(spec, specPath = 'topology.spec.json') {
   }
 
   const surfaces = spec.surfaces ?? {};
-  if (!surfaces['application.public-ingress']) throw new Error(`${specPath} missing application.public-ingress`);
-  if (!surfaces['platform.api-gateway']) throw new Error(`${specPath} missing platform.api-gateway`);
+  for (const surfaceId of REQUIRED_SURFACES_BY_ARCHETYPE[spec.archetype] ?? DEFAULT_REQUIRED_SURFACES) {
+    if (!surfaces[surfaceId]) {
+      throw new Error(`${specPath} missing required surface for archetype ${spec.archetype}: ${surfaceId}`);
+    }
+  }
   for (const [surfaceId, surface] of Object.entries(surfaces)) {
     if (!normalizeText(surface.connectivityPlane)) throw new Error(`${specPath} surfaces.${surfaceId}.connectivityPlane is required`);
     if (!surface.bindEnv && !surface.httpUrlEnv && !surface.optional) {
@@ -304,7 +365,18 @@ export function validateTopologySpecV5(spec, specPath = 'topology.spec.json') {
     }
   }
   const standalone = orchestration['standalone.development'];
-  if (standalone) {
+  // APP_RUNTIME_TOPOLOGY_SPEC.md: a `standalone.development` plan reports exactly
+  // one application HTTP ingress *when the application serves application HTTP
+  // APIs*. That condition is load-bearing: a browser-only client root declares
+  // no application-plane HTTP surface, so it starts no standalone gateway and its
+  // orchestration legitimately carries no `api-standalone-gateway` process.
+  // `protocols` is optional on a surface (the schema constrains it only when it is
+  // present), so the signal is the connectivity plane itself: an application-plane
+  // surface that is not declared `optional` is an ingress the application serves.
+  const declaresApplicationHttpApi = Object.entries(surfaces).some(([, surface]) => (
+    surface?.connectivityPlane === 'application' && surface.optional !== true
+  ));
+  if (standalone && declaresApplicationHttpApi) {
     const gateways = (standalone.processes ?? []).filter((process) => process.role === 'api-standalone-gateway');
     if (gateways.length !== 1) throw new Error(`${specPath} standalone.development requires exactly one api-standalone-gateway`);
   }

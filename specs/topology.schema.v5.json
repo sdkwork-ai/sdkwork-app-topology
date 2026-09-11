@@ -5,12 +5,13 @@
   "type": "object",
   "additionalProperties": true,
   "not": { "required": ["cloudIngress"] },
-  "required": ["schemaVersion", "kind", "appId", "applicationCode", "vocabulary", "profileFiles", "surfaces", "orchestration"],
+  "required": ["schemaVersion", "kind", "appId", "applicationCode", "archetype", "vocabulary", "profileFiles", "surfaces", "orchestration"],
   "properties": {
     "schemaVersion": { "const": 5 },
     "kind": { "const": "sdkwork.app.topology" },
     "appId": { "type": "string", "pattern": "^sdkwork-[a-z0-9-]+$" },
     "applicationCode": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+    "archetype": { "type": "string", "enum": ["application-http-gateway", "realtime-application-platform", "application-rest-edge-device", "application-client-root"] },
     "database": false,
     "vocabulary": {
       "type": "object",
@@ -20,7 +21,7 @@
           "type": "object",
           "required": ["allowed"],
           "properties": {
-            "allowed": { "const": ["standalone", "cloud"] }
+            "allowed": { "type": "array", "items": { "enum": ["standalone", "cloud"] }, "minItems": 1, "maxItems": 2, "uniqueItems": true }
           }
         },
         "environment": {
@@ -314,5 +315,11 @@
         }
       }
     }
-  }
+  },
+  "allOf": [
+    { "if": { "properties": { "archetype": { "const": "application-http-gateway" } }, "required": ["archetype"] }, "then": { "properties": { "surfaces": { "required": ["application.public-ingress"] } } } },
+    { "if": { "properties": { "archetype": { "const": "realtime-application-platform" } }, "required": ["archetype"] }, "then": { "properties": { "surfaces": { "required": ["application.public-ingress", "platform.api-gateway"] } } } },
+    { "if": { "properties": { "archetype": { "const": "application-rest-edge-device" } }, "required": ["archetype"] }, "then": { "properties": { "surfaces": { "required": ["application.app-http", "edge.device-ingress", "platform.api-gateway"] } } } },
+    { "if": { "properties": { "archetype": { "const": "application-client-root" } }, "required": ["archetype"] }, "then": { "properties": { "surfaces": { "required": ["platform.api-gateway"] } } } }
+  ]
 }

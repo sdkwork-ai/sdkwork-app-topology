@@ -1,0 +1,1101 @@
+{
+  "schemaVersion": 5,
+  "kind": "sdkwork.app.topology",
+  "appId": "sdkwork-aiot",
+  "applicationCode": "aiot",
+  "archetype": "application-rest-edge-device",
+  "profileRoot": "etc/topology",
+  "profilePattern": "{deploymentProfile}.{environment}.env",
+  "vocabulary": {
+    "environment": {
+      "allowed": [
+        "development",
+        "test",
+        "staging",
+        "production",
+        "demo"
+      ]
+    },
+    "connectivityPlane": {
+      "allowed": [
+        "application",
+        "platform",
+        "edge"
+      ]
+    },
+    "deploymentProfile": {
+      "allowed": [
+        "standalone",
+        "cloud"
+      ]
+    }
+  },
+  "defaults": {
+    "developmentProfileId": "standalone.development",
+    "productionProfileId": "cloud.production",
+    "gatewayBind": "127.0.0.1:3900",
+    "desktopBuildProfileId": "standalone.production"
+  },
+  "profileFiles": {
+    "standalone.development": "examples/sdkwork-aiot/etc/topology/standalone.development.env",
+    "cloud.development": "examples/sdkwork-aiot/etc/topology/cloud.development.env",
+    "standalone.production": "examples/sdkwork-aiot/etc/topology/standalone.production.env",
+    "cloud.production": "examples/sdkwork-aiot/etc/topology/cloud.production.env",
+    "standalone.test": "examples/sdkwork-aiot/etc/topology/standalone.test.env",
+    "standalone.staging": "examples/sdkwork-aiot/etc/topology/standalone.staging.env",
+    "cloud.test": "examples/sdkwork-aiot/etc/topology/cloud.test.env",
+    "cloud.staging": "examples/sdkwork-aiot/etc/topology/cloud.staging.env",
+    "standalone.demo": "examples/sdkwork-aiot/etc/topology/standalone.demo.env",
+    "cloud.demo": "examples/sdkwork-aiot/etc/topology/cloud.demo.env"
+  },
+  "envKeys": {
+    "environment": "SDKWORK_AIOT_ENVIRONMENT",
+    "profileId": "SDKWORK_AIOT_PROFILE_ID",
+    "apiGatewayBaseUrl": "SDKWORK_AIOT_PLATFORM_API_GATEWAY_HTTP_URL",
+    "clientApiGatewayBaseUrl": "VITE_SDKWORK_AIOT_PLATFORM_API_GATEWAY_HTTP_URL",
+    "deploymentProfile": "SDKWORK_AIOT_DEPLOYMENT_PROFILE",
+    "clientDeploymentProfile": "VITE_SDKWORK_AIOT_DEPLOYMENT_PROFILE"
+  },
+  "surfaces": {
+    "application.public-ingress": {
+      "connectivityPlane": "application",
+      "protocols": [
+        "http"
+      ],
+      "bindEnv": "SDKWORK_AIOT_APPLICATION_PUBLIC_INGRESS_BIND",
+      "httpUrlEnv": "SDKWORK_AIOT_APPLICATION_PUBLIC_HTTP_URL",
+      "clientHttpEnv": "VITE_SDKWORK_AIOT_APPLICATION_PUBLIC_HTTP_URL"
+    },
+    "application.app-http": {
+      "connectivityPlane": "application",
+      "protocols": [
+        "http"
+      ],
+      "httpUrlEnv": "SDKWORK_AIOT_APPLICATION_APP_HTTP_URL",
+      "clientHttpEnv": "VITE_SDKWORK_AIOT_APPLICATION_APP_HTTP_URL"
+    },
+    "application.admin-http": {
+      "connectivityPlane": "application",
+      "protocols": [
+        "http"
+      ],
+      "httpUrlEnv": "SDKWORK_AIOT_APPLICATION_ADMIN_HTTP_URL",
+      "clientHttpEnv": "VITE_SDKWORK_AIOT_APPLICATION_ADMIN_HTTP_URL"
+    },
+    "edge.device-ingress": {
+      "connectivityPlane": "edge",
+      "protocols": [
+        "http",
+        "websocket",
+        "mqtt",
+        "udp"
+      ],
+      "bindEnv": "SDKWORK_AIOT_EDGE_DEVICE_INGRESS_BIND",
+      "httpUrlEnv": "SDKWORK_AIOT_EDGE_DEVICE_INGRESS_HTTP_URL",
+      "websocketUrlEnv": "SDKWORK_AIOT_EDGE_DEVICE_INGRESS_WEBSOCKET_URL",
+      "clientHttpEnv": "VITE_SDKWORK_AIOT_EDGE_DEVICE_INGRESS_HTTP_URL",
+      "clientWebsocketEnv": "VITE_SDKWORK_AIOT_EDGE_DEVICE_INGRESS_WEBSOCKET_URL"
+    },
+    "platform.api-gateway": {
+      "connectivityPlane": "platform",
+      "protocols": [
+        "http"
+      ],
+      "httpUrlEnv": "SDKWORK_AIOT_PLATFORM_API_GATEWAY_HTTP_URL",
+      "clientHttpEnv": "VITE_SDKWORK_AIOT_PLATFORM_API_GATEWAY_HTTP_URL"
+    }
+  },
+  "cloudPublicHosts": {
+    "application.app-http": {
+      "httpHost": "aiot-app.sdkwork.com",
+      "environments": {
+        "development": {
+          "httpHosts": [
+            "aiot-app-dev.sdkwork.com",
+            "aiot-app-dev.birdcoder.com",
+            "aiot-app-dev.dtupay.com",
+            "aiot-app-dev.noaper.com",
+            "aiot-app-dev.sdkwork.cn",
+            "aiot-app-dev.birdcoder.cn",
+            "aiot-app-dev.dtupay.cn",
+            "aiot-app-dev.noaper.cn",
+            "aiot-app-dev.skubc.com",
+            "aiot-app-dev.skubc.cn",
+            "aiot-app-dev.zowalk.com",
+            "aiot-app-dev.zowalk.cn",
+            "aiot-app-dev.offer86.com",
+            "aiot-app-dev.offer86.cn",
+            "aiot-app-dev.86offer.com",
+            "aiot-app-dev.86offer.cn"
+          ]
+        },
+        "test": {
+          "httpHosts": [
+            "aiot-app-test.sdkwork.com",
+            "aiot-app-test.birdcoder.com",
+            "aiot-app-test.dtupay.com",
+            "aiot-app-test.noaper.com",
+            "aiot-app-test.sdkwork.cn",
+            "aiot-app-test.birdcoder.cn",
+            "aiot-app-test.dtupay.cn",
+            "aiot-app-test.noaper.cn",
+            "aiot-app-test.skubc.com",
+            "aiot-app-test.skubc.cn",
+            "aiot-app-test.zowalk.com",
+            "aiot-app-test.zowalk.cn",
+            "aiot-app-test.offer86.com",
+            "aiot-app-test.offer86.cn",
+            "aiot-app-test.86offer.com",
+            "aiot-app-test.86offer.cn"
+          ]
+        },
+        "staging": {
+          "httpHosts": [
+            "aiot-app-staging.sdkwork.com",
+            "aiot-app-staging.birdcoder.com",
+            "aiot-app-staging.dtupay.com",
+            "aiot-app-staging.noaper.com",
+            "aiot-app-staging.sdkwork.cn",
+            "aiot-app-staging.birdcoder.cn",
+            "aiot-app-staging.dtupay.cn",
+            "aiot-app-staging.noaper.cn",
+            "aiot-app-staging.skubc.com",
+            "aiot-app-staging.skubc.cn",
+            "aiot-app-staging.zowalk.com",
+            "aiot-app-staging.zowalk.cn",
+            "aiot-app-staging.offer86.com",
+            "aiot-app-staging.offer86.cn",
+            "aiot-app-staging.86offer.com",
+            "aiot-app-staging.86offer.cn"
+          ]
+        },
+        "demo": {
+          "httpHosts": [
+            "aiot-app-demo.sdkwork.com",
+            "aiot-app-demo.birdcoder.com",
+            "aiot-app-demo.dtupay.com",
+            "aiot-app-demo.noaper.com",
+            "aiot-app-demo.sdkwork.cn",
+            "aiot-app-demo.birdcoder.cn",
+            "aiot-app-demo.dtupay.cn",
+            "aiot-app-demo.noaper.cn",
+            "aiot-app-demo.skubc.com",
+            "aiot-app-demo.skubc.cn",
+            "aiot-app-demo.zowalk.com",
+            "aiot-app-demo.zowalk.cn",
+            "aiot-app-demo.offer86.com",
+            "aiot-app-demo.offer86.cn",
+            "aiot-app-demo.86offer.com",
+            "aiot-app-demo.86offer.cn"
+          ]
+        }
+      },
+      "httpHosts": [
+        "aiot-app.sdkwork.com",
+        "aiot-app.birdcoder.com",
+        "aiot-app.dtupay.com",
+        "aiot-app.noaper.com",
+        "aiot-app.sdkwork.cn",
+        "aiot-app.birdcoder.cn",
+        "aiot-app.dtupay.cn",
+        "aiot-app.noaper.cn",
+        "aiot-app.skubc.com",
+        "aiot-app.skubc.cn",
+        "aiot-app.zowalk.com",
+        "aiot-app.zowalk.cn",
+        "aiot-app.offer86.com",
+        "aiot-app.offer86.cn",
+        "aiot-app.86offer.com",
+        "aiot-app.86offer.cn"
+      ]
+    },
+    "application.admin-http": {
+      "httpHost": "aiot-admin.sdkwork.com",
+      "environments": {
+        "development": {
+          "httpHosts": [
+            "aiot-admin-dev.sdkwork.com",
+            "aiot-admin-dev.birdcoder.com",
+            "aiot-admin-dev.dtupay.com",
+            "aiot-admin-dev.noaper.com",
+            "aiot-admin-dev.sdkwork.cn",
+            "aiot-admin-dev.birdcoder.cn",
+            "aiot-admin-dev.dtupay.cn",
+            "aiot-admin-dev.noaper.cn",
+            "aiot-admin-dev.skubc.com",
+            "aiot-admin-dev.skubc.cn",
+            "aiot-admin-dev.zowalk.com",
+            "aiot-admin-dev.zowalk.cn",
+            "aiot-admin-dev.offer86.com",
+            "aiot-admin-dev.offer86.cn",
+            "aiot-admin-dev.86offer.com",
+            "aiot-admin-dev.86offer.cn"
+          ]
+        },
+        "test": {
+          "httpHosts": [
+            "aiot-admin-test.sdkwork.com",
+            "aiot-admin-test.birdcoder.com",
+            "aiot-admin-test.dtupay.com",
+            "aiot-admin-test.noaper.com",
+            "aiot-admin-test.sdkwork.cn",
+            "aiot-admin-test.birdcoder.cn",
+            "aiot-admin-test.dtupay.cn",
+            "aiot-admin-test.noaper.cn",
+            "aiot-admin-test.skubc.com",
+            "aiot-admin-test.skubc.cn",
+            "aiot-admin-test.zowalk.com",
+            "aiot-admin-test.zowalk.cn",
+            "aiot-admin-test.offer86.com",
+            "aiot-admin-test.offer86.cn",
+            "aiot-admin-test.86offer.com",
+            "aiot-admin-test.86offer.cn"
+          ]
+        },
+        "staging": {
+          "httpHosts": [
+            "aiot-admin-staging.sdkwork.com",
+            "aiot-admin-staging.birdcoder.com",
+            "aiot-admin-staging.dtupay.com",
+            "aiot-admin-staging.noaper.com",
+            "aiot-admin-staging.sdkwork.cn",
+            "aiot-admin-staging.birdcoder.cn",
+            "aiot-admin-staging.dtupay.cn",
+            "aiot-admin-staging.noaper.cn",
+            "aiot-admin-staging.skubc.com",
+            "aiot-admin-staging.skubc.cn",
+            "aiot-admin-staging.zowalk.com",
+            "aiot-admin-staging.zowalk.cn",
+            "aiot-admin-staging.offer86.com",
+            "aiot-admin-staging.offer86.cn",
+            "aiot-admin-staging.86offer.com",
+            "aiot-admin-staging.86offer.cn"
+          ]
+        },
+        "demo": {
+          "httpHosts": [
+            "aiot-admin-demo.sdkwork.com",
+            "aiot-admin-demo.birdcoder.com",
+            "aiot-admin-demo.dtupay.com",
+            "aiot-admin-demo.noaper.com",
+            "aiot-admin-demo.sdkwork.cn",
+            "aiot-admin-demo.birdcoder.cn",
+            "aiot-admin-demo.dtupay.cn",
+            "aiot-admin-demo.noaper.cn",
+            "aiot-admin-demo.skubc.com",
+            "aiot-admin-demo.skubc.cn",
+            "aiot-admin-demo.zowalk.com",
+            "aiot-admin-demo.zowalk.cn",
+            "aiot-admin-demo.offer86.com",
+            "aiot-admin-demo.offer86.cn",
+            "aiot-admin-demo.86offer.com",
+            "aiot-admin-demo.86offer.cn"
+          ]
+        }
+      },
+      "httpHosts": [
+        "aiot-admin.sdkwork.com",
+        "aiot-admin.birdcoder.com",
+        "aiot-admin.dtupay.com",
+        "aiot-admin.noaper.com",
+        "aiot-admin.sdkwork.cn",
+        "aiot-admin.birdcoder.cn",
+        "aiot-admin.dtupay.cn",
+        "aiot-admin.noaper.cn",
+        "aiot-admin.skubc.com",
+        "aiot-admin.skubc.cn",
+        "aiot-admin.zowalk.com",
+        "aiot-admin.zowalk.cn",
+        "aiot-admin.offer86.com",
+        "aiot-admin.offer86.cn",
+        "aiot-admin.86offer.com",
+        "aiot-admin.86offer.cn"
+      ]
+    },
+    "edge.device-ingress": {
+      "httpHost": "edge.aiot.sdkwork.com",
+      "environments": {
+        "development": {
+          "httpHosts": [
+            "edge.aiot-dev.sdkwork.com",
+            "edge.aiot-dev.birdcoder.com",
+            "edge.aiot-dev.dtupay.com",
+            "edge.aiot-dev.noaper.com",
+            "edge.aiot-dev.sdkwork.cn",
+            "edge.aiot-dev.birdcoder.cn",
+            "edge.aiot-dev.dtupay.cn",
+            "edge.aiot-dev.noaper.cn",
+            "edge.aiot-dev.skubc.com",
+            "edge.aiot-dev.skubc.cn",
+            "edge.aiot-dev.zowalk.com",
+            "edge.aiot-dev.zowalk.cn",
+            "edge.aiot-dev.offer86.com",
+            "edge.aiot-dev.offer86.cn",
+            "edge.aiot-dev.86offer.com",
+            "edge.aiot-dev.86offer.cn",
+            "edge-dev.aiot.sdkwork.com"
+          ]
+        },
+        "test": {
+          "httpHosts": [
+            "edge.aiot-test.sdkwork.com",
+            "edge.aiot-test.birdcoder.com",
+            "edge.aiot-test.dtupay.com",
+            "edge.aiot-test.noaper.com",
+            "edge.aiot-test.sdkwork.cn",
+            "edge.aiot-test.birdcoder.cn",
+            "edge.aiot-test.dtupay.cn",
+            "edge.aiot-test.noaper.cn",
+            "edge.aiot-test.skubc.com",
+            "edge.aiot-test.skubc.cn",
+            "edge.aiot-test.zowalk.com",
+            "edge.aiot-test.zowalk.cn",
+            "edge.aiot-test.offer86.com",
+            "edge.aiot-test.offer86.cn",
+            "edge.aiot-test.86offer.com",
+            "edge.aiot-test.86offer.cn",
+            "edge-test.aiot.sdkwork.com"
+          ]
+        },
+        "staging": {
+          "httpHosts": [
+            "edge.aiot-staging.sdkwork.com",
+            "edge.aiot-staging.birdcoder.com",
+            "edge.aiot-staging.dtupay.com",
+            "edge.aiot-staging.noaper.com",
+            "edge.aiot-staging.sdkwork.cn",
+            "edge.aiot-staging.birdcoder.cn",
+            "edge.aiot-staging.dtupay.cn",
+            "edge.aiot-staging.noaper.cn",
+            "edge.aiot-staging.skubc.com",
+            "edge.aiot-staging.skubc.cn",
+            "edge.aiot-staging.zowalk.com",
+            "edge.aiot-staging.zowalk.cn",
+            "edge.aiot-staging.offer86.com",
+            "edge.aiot-staging.offer86.cn",
+            "edge.aiot-staging.86offer.com",
+            "edge.aiot-staging.86offer.cn",
+            "edge-staging.aiot.sdkwork.com"
+          ]
+        },
+        "demo": {
+          "httpHosts": [
+            "edge-demo.aiot.sdkwork.com",
+            "edge-demo.aiot.birdcoder.com",
+            "edge-demo.aiot.dtupay.com",
+            "edge-demo.aiot.noaper.com",
+            "edge-demo.aiot.sdkwork.cn",
+            "edge-demo.aiot.birdcoder.cn",
+            "edge-demo.aiot.dtupay.cn",
+            "edge-demo.aiot.noaper.cn",
+            "edge-demo.aiot.skubc.com",
+            "edge-demo.aiot.skubc.cn",
+            "edge-demo.aiot.zowalk.com",
+            "edge-demo.aiot.zowalk.cn",
+            "edge-demo.aiot.offer86.com",
+            "edge-demo.aiot.offer86.cn",
+            "edge-demo.aiot.86offer.com",
+            "edge-demo.aiot.86offer.cn"
+          ]
+        }
+      },
+      "httpHosts": [
+        "edge.aiot.sdkwork.com",
+        "edge.aiot.birdcoder.com",
+        "edge.aiot.dtupay.com",
+        "edge.aiot.noaper.com",
+        "edge.aiot.sdkwork.cn",
+        "edge.aiot.birdcoder.cn",
+        "edge.aiot.dtupay.cn",
+        "edge.aiot.noaper.cn",
+        "edge.aiot.skubc.com",
+        "edge.aiot.skubc.cn",
+        "edge.aiot.zowalk.com",
+        "edge.aiot.zowalk.cn",
+        "edge.aiot.offer86.com",
+        "edge.aiot.offer86.cn",
+        "edge.aiot.86offer.com",
+        "edge.aiot.86offer.cn"
+      ]
+    },
+    "platform.api-gateway": {
+      "httpHost": "api.sdkwork.com",
+      "environments": {
+        "development": {
+          "httpHosts": [
+            "api-dev.sdkwork.com",
+            "api-dev.birdcoder.com",
+            "api-dev.dtupay.com",
+            "api-dev.noaper.com",
+            "api-dev.sdkwork.cn",
+            "api-dev.birdcoder.cn",
+            "api-dev.dtupay.cn",
+            "api-dev.noaper.cn",
+            "api-dev.skubc.com",
+            "api-dev.skubc.cn",
+            "api-dev.zowalk.com",
+            "api-dev.zowalk.cn",
+            "api-dev.offer86.com",
+            "api-dev.offer86.cn",
+            "api-dev.86offer.com",
+            "api-dev.86offer.cn"
+          ]
+        },
+        "test": {
+          "httpHosts": [
+            "api-test.sdkwork.com",
+            "api-test.birdcoder.com",
+            "api-test.dtupay.com",
+            "api-test.noaper.com",
+            "api-test.sdkwork.cn",
+            "api-test.birdcoder.cn",
+            "api-test.dtupay.cn",
+            "api-test.noaper.cn",
+            "api-test.skubc.com",
+            "api-test.skubc.cn",
+            "api-test.zowalk.com",
+            "api-test.zowalk.cn",
+            "api-test.offer86.com",
+            "api-test.offer86.cn",
+            "api-test.86offer.com",
+            "api-test.86offer.cn"
+          ]
+        },
+        "staging": {
+          "httpHosts": [
+            "api-staging.sdkwork.com",
+            "api-staging.birdcoder.com",
+            "api-staging.dtupay.com",
+            "api-staging.noaper.com",
+            "api-staging.sdkwork.cn",
+            "api-staging.birdcoder.cn",
+            "api-staging.dtupay.cn",
+            "api-staging.noaper.cn",
+            "api-staging.skubc.com",
+            "api-staging.skubc.cn",
+            "api-staging.zowalk.com",
+            "api-staging.zowalk.cn",
+            "api-staging.offer86.com",
+            "api-staging.offer86.cn",
+            "api-staging.86offer.com",
+            "api-staging.86offer.cn"
+          ]
+        },
+        "demo": {
+          "httpHosts": [
+            "api-demo.sdkwork.com",
+            "api-demo.birdcoder.com",
+            "api-demo.dtupay.com",
+            "api-demo.noaper.com",
+            "api-demo.sdkwork.cn",
+            "api-demo.birdcoder.cn",
+            "api-demo.dtupay.cn",
+            "api-demo.noaper.cn",
+            "api-demo.skubc.com",
+            "api-demo.skubc.cn",
+            "api-demo.zowalk.com",
+            "api-demo.zowalk.cn",
+            "api-demo.offer86.com",
+            "api-demo.offer86.cn",
+            "api-demo.86offer.com",
+            "api-demo.86offer.cn"
+          ]
+        }
+      },
+      "httpHosts": [
+        "api.sdkwork.com",
+        "api.birdcoder.com",
+        "api.dtupay.com",
+        "api.noaper.com",
+        "api.sdkwork.cn",
+        "api.birdcoder.cn",
+        "api.dtupay.cn",
+        "api.noaper.cn",
+        "api.skubc.com",
+        "api.skubc.cn",
+        "api.zowalk.com",
+        "api.zowalk.cn",
+        "api.offer86.com",
+        "api.offer86.cn",
+        "api.86offer.com",
+        "api.86offer.cn"
+      ]
+    },
+    "application.public-ingress": {
+      "httpHost": "aiot.sdkwork.com",
+      "environments": {
+        "development": {
+          "httpHosts": [
+            "aiot-dev.sdkwork.com",
+            "aiot-dev.birdcoder.com",
+            "aiot-dev.dtupay.com",
+            "aiot-dev.noaper.com",
+            "aiot-dev.sdkwork.cn",
+            "aiot-dev.birdcoder.cn",
+            "aiot-dev.dtupay.cn",
+            "aiot-dev.noaper.cn",
+            "aiot-dev.skubc.com",
+            "aiot-dev.skubc.cn",
+            "aiot-dev.zowalk.com",
+            "aiot-dev.zowalk.cn",
+            "aiot-dev.offer86.com",
+            "aiot-dev.offer86.cn",
+            "aiot-dev.86offer.com",
+            "aiot-dev.86offer.cn"
+          ]
+        },
+        "test": {
+          "httpHosts": [
+            "aiot-test.sdkwork.com",
+            "aiot-test.birdcoder.com",
+            "aiot-test.dtupay.com",
+            "aiot-test.noaper.com",
+            "aiot-test.sdkwork.cn",
+            "aiot-test.birdcoder.cn",
+            "aiot-test.dtupay.cn",
+            "aiot-test.noaper.cn",
+            "aiot-test.skubc.com",
+            "aiot-test.skubc.cn",
+            "aiot-test.zowalk.com",
+            "aiot-test.zowalk.cn",
+            "aiot-test.offer86.com",
+            "aiot-test.offer86.cn",
+            "aiot-test.86offer.com",
+            "aiot-test.86offer.cn"
+          ]
+        },
+        "staging": {
+          "httpHosts": [
+            "aiot-staging.sdkwork.com",
+            "aiot-staging.birdcoder.com",
+            "aiot-staging.dtupay.com",
+            "aiot-staging.noaper.com",
+            "aiot-staging.sdkwork.cn",
+            "aiot-staging.birdcoder.cn",
+            "aiot-staging.dtupay.cn",
+            "aiot-staging.noaper.cn",
+            "aiot-staging.skubc.com",
+            "aiot-staging.skubc.cn",
+            "aiot-staging.zowalk.com",
+            "aiot-staging.zowalk.cn",
+            "aiot-staging.offer86.com",
+            "aiot-staging.offer86.cn",
+            "aiot-staging.86offer.com",
+            "aiot-staging.86offer.cn"
+          ]
+        },
+        "demo": {
+          "httpHosts": [
+            "aiot-demo.sdkwork.com",
+            "aiot-demo.birdcoder.com",
+            "aiot-demo.dtupay.com",
+            "aiot-demo.noaper.com",
+            "aiot-demo.sdkwork.cn",
+            "aiot-demo.birdcoder.cn",
+            "aiot-demo.dtupay.cn",
+            "aiot-demo.noaper.cn",
+            "aiot-demo.skubc.com",
+            "aiot-demo.skubc.cn",
+            "aiot-demo.zowalk.com",
+            "aiot-demo.zowalk.cn",
+            "aiot-demo.offer86.com",
+            "aiot-demo.offer86.cn",
+            "aiot-demo.86offer.com",
+            "aiot-demo.86offer.cn"
+          ]
+        }
+      },
+      "httpHosts": [
+        "aiot.sdkwork.com",
+        "aiot.birdcoder.com",
+        "aiot.dtupay.com",
+        "aiot.noaper.com",
+        "aiot.sdkwork.cn",
+        "aiot.birdcoder.cn",
+        "aiot.dtupay.cn",
+        "aiot.noaper.cn",
+        "aiot.skubc.com",
+        "aiot.skubc.cn",
+        "aiot.zowalk.com",
+        "aiot.zowalk.cn",
+        "aiot.offer86.com",
+        "aiot.offer86.cn",
+        "aiot.86offer.com",
+        "aiot.86offer.cn"
+      ]
+    }
+  },
+  "intelligence": {
+    "mode": "SDKWORK_AIOT_INTELLIGENCE_MODE",
+    "kernelHttpUrl": "SDKWORK_AIOT_INTELLIGENCE_KERNEL_HTTP_URL",
+    "kernelAgentId": "SDKWORK_AIOT_INTELLIGENCE_KERNEL_AGENT_ID",
+    "cloudRouterOpenHttpUrl": "SDKWORK_CLOUDROUTER_APPLICATION_OPEN_HTTP_URL",
+    "cloudRouterApiKey": "SDKWORK_CLOUDROUTER_API_KEY",
+    "asrModel": "SDKWORK_AIOT_INTELLIGENCE_ASR_MODEL",
+    "ttsModel": "SDKWORK_AIOT_INTELLIGENCE_TTS_MODEL",
+    "ttsVoice": "SDKWORK_AIOT_INTELLIGENCE_TTS_VOICE",
+    "ttsResponseFormat": "SDKWORK_AIOT_INTELLIGENCE_TTS_RESPONSE_FORMAT",
+    "ttsSampleRate": "SDKWORK_AIOT_INTELLIGENCE_TTS_SAMPLE_RATE"
+  },
+  "components": {
+    "deviceEdgeRuntime": {
+      "crate": "sdkwork-aiot-device-edge-runtime",
+      "binary": "sdkwork-aiot-device-edge-runtime"
+    },
+    "apiAssembly": {
+      "crate": "sdkwork-api-aiot-assembly"
+    },
+    "standaloneGateway": {
+      "crate": "sdkwork-api-aiot-standalone-gateway",
+      "binary": "sdkwork-api-aiot-standalone-gateway"
+    }
+  },
+  "orchestration": {
+    "profiles": {
+      "standalone.development": {
+        "processes": [
+          {
+            "id": "application.public-ingress",
+            "script": "_sdkwork:gateway:standalone",
+            "required": true,
+            "role": "api-standalone-gateway"
+          },
+          {
+            "id": "edge.device-ingress",
+            "script": "_sdkwork:runtime:device-edge",
+            "required": true,
+            "role": "edge-runtime",
+            "decisionRef": "docs/architecture/decisions/ADR-20260720-edge-split-cloud-ingress.md"
+          },
+          {
+            "id": "aiot-browser",
+            "role": "client",
+            "applicationRoot": "apps/sdkwork-aiot-pc",
+            "bindEnv": "SDKWORK_AIOT_WEB_DEV_INGRESS_BIND",
+            "runtimeTargets": [
+              "browser"
+            ],
+            "clientArchitectures": [
+              "pc-web",
+              "h5"
+            ],
+            "required": true
+          },
+          {
+            "id": "aiot-mini-program",
+            "script": "_sdkwork:client:mini-program:standalone",
+            "required": true,
+            "role": "client",
+            "runtimeTargets": [
+              "mini-program"
+            ],
+            "clientArchitectures": [
+              "mini-program"
+            ]
+          }
+        ],
+        "healthSurfaces": [
+          "application.public-ingress",
+          "edge.device-ingress"
+        ],
+        "browserDeliveries": [
+          {
+            "id": "aiot-adaptive-web",
+            "applicationRoot": "apps/sdkwork-aiot-pc",
+            "clientArchitectures": [
+              "pc-web",
+              "h5"
+            ],
+            "originMode": "same-origin",
+            "deliveryMode": "dev-server-proxy",
+            "clientProcessId": "aiot-browser",
+            "apiSurfaceId": "application.public-ingress",
+            "preserveCanonicalPaths": true,
+            "tabletArchitecture": "pc-web",
+            "renderers": {
+              "pc-web": {
+                "applicationRoot": "apps/sdkwork-aiot-pc",
+                "command": "pnpm",
+                "args": [
+                  "exec",
+                  "vite",
+                  "--host",
+                  "{host}",
+                  "--port",
+                  "{port}",
+                  "--strictPort"
+                ],
+                "defaultPort": 5175,
+                "portEnv": "SDKWORK_AIOT_PC_INTERNAL_DEV_PORT",
+                "env": {
+                  "VITE_SDKWORK_AIOT_APPLICATION_PUBLIC_HTTP_URL": "{httpOrigin}"
+                }
+              },
+              "h5": {
+                "applicationRoot": "apps/sdkwork-aiot-h5",
+                "command": "pnpm",
+                "args": [
+                  "exec",
+                  "vite",
+                  "--host",
+                  "{host}",
+                  "--port",
+                  "{port}",
+                  "--strictPort"
+                ],
+                "defaultPort": 5176,
+                "portEnv": "SDKWORK_AIOT_H5_INTERNAL_DEV_PORT",
+                "env": {
+                  "VITE_SDKWORK_AIOT_APPLICATION_PUBLIC_HTTP_URL": "{httpOrigin}"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "cloud.development": {
+        "processes": [
+          {
+            "id": "aiot-browser",
+            "role": "client",
+            "applicationRoot": "apps/sdkwork-aiot-pc",
+            "bindEnv": "SDKWORK_AIOT_WEB_DEV_INGRESS_BIND",
+            "runtimeTargets": [
+              "browser"
+            ],
+            "clientArchitectures": [
+              "pc-web",
+              "h5"
+            ],
+            "required": true
+          },
+          {
+            "id": "aiot-mini-program",
+            "script": "_sdkwork:client:mini-program:cloud",
+            "required": true,
+            "role": "client",
+            "runtimeTargets": [
+              "mini-program"
+            ],
+            "clientArchitectures": [
+              "mini-program"
+            ]
+          }
+        ],
+        "healthSurfaces": [
+          "application.public-ingress",
+          "platform.api-gateway"
+        ],
+        "browserDeliveries": [
+          {
+            "id": "aiot-adaptive-web",
+            "applicationRoot": "apps/sdkwork-aiot-pc",
+            "clientArchitectures": [
+              "pc-web",
+              "h5"
+            ],
+            "originMode": "same-origin",
+            "deliveryMode": "dev-server-proxy",
+            "clientProcessId": "aiot-browser",
+            "apiSurfaceId": "application.public-ingress",
+            "preserveCanonicalPaths": true,
+            "tabletArchitecture": "pc-web",
+            "renderers": {
+              "pc-web": {
+                "applicationRoot": "apps/sdkwork-aiot-pc",
+                "command": "pnpm",
+                "args": [
+                  "exec",
+                  "vite",
+                  "--host",
+                  "{host}",
+                  "--port",
+                  "{port}",
+                  "--strictPort"
+                ],
+                "defaultPort": 5175,
+                "portEnv": "SDKWORK_AIOT_PC_INTERNAL_DEV_PORT",
+                "env": {
+                  "VITE_SDKWORK_AIOT_APPLICATION_PUBLIC_HTTP_URL": "{httpOrigin}"
+                }
+              },
+              "h5": {
+                "applicationRoot": "apps/sdkwork-aiot-h5",
+                "command": "pnpm",
+                "args": [
+                  "exec",
+                  "vite",
+                  "--host",
+                  "{host}",
+                  "--port",
+                  "{port}",
+                  "--strictPort"
+                ],
+                "defaultPort": 5176,
+                "portEnv": "SDKWORK_AIOT_H5_INTERNAL_DEV_PORT",
+                "env": {
+                  "VITE_SDKWORK_AIOT_APPLICATION_PUBLIC_HTTP_URL": "{httpOrigin}"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "cloud.production": {
+        "processes": [],
+        "healthSurfaces": []
+      },
+      "standalone.production": {
+        "processes": [
+          {
+            "id": "application.public-ingress",
+            "role": "api-standalone-gateway",
+            "script": "_sdkwork:gateway:standalone",
+            "required": true
+          }
+        ],
+        "healthSurfaces": [],
+        "browserDeliveries": [
+          {
+            "id": "aiot-static-pc-web",
+            "applicationRoot": "apps/sdkwork-aiot-pc",
+            "clientArchitectures": [
+              "pc-web"
+            ],
+            "originMode": "same-origin",
+            "deliveryMode": "gateway-static",
+            "apiSurfaceId": "application.public-ingress",
+            "hostProcessId": "application.public-ingress",
+            "buildOutput": "apps/sdkwork-aiot-pc/dist",
+            "runtimeRootEnv": "SDKWORK_AIOT_PC_STATIC_ROOT",
+            "mountPath": "/",
+            "spaFallback": "/index.html"
+          },
+          {
+            "id": "aiot-static-h5",
+            "applicationRoot": "apps/sdkwork-aiot-pc",
+            "clientArchitectures": [
+              "h5"
+            ],
+            "originMode": "same-origin",
+            "deliveryMode": "gateway-static",
+            "apiSurfaceId": "application.public-ingress",
+            "hostProcessId": "application.public-ingress",
+            "buildOutput": "apps/sdkwork-aiot-pc/dist",
+            "runtimeRootEnv": "SDKWORK_AIOT_PC_STATIC_ROOT",
+            "mountPath": "/",
+            "spaFallback": "/index.html"
+          }
+        ]
+      },
+      "standalone.test": {
+        "processes": [
+          {
+            "id": "application.public-ingress",
+            "script": "_sdkwork:gateway:standalone",
+            "required": true,
+            "role": "api-standalone-gateway"
+          },
+          {
+            "id": "edge.device-ingress",
+            "script": "_sdkwork:runtime:device-edge",
+            "required": true,
+            "role": "edge-runtime",
+            "decisionRef": "docs/architecture/decisions/ADR-20260720-edge-split-cloud-ingress.md"
+          },
+          {
+            "id": "aiot-browser",
+            "role": "client",
+            "applicationRoot": "apps/sdkwork-aiot-pc",
+            "bindEnv": "SDKWORK_AIOT_WEB_DEV_INGRESS_BIND",
+            "runtimeTargets": [
+              "browser"
+            ],
+            "clientArchitectures": [
+              "pc-web",
+              "h5"
+            ],
+            "required": true
+          },
+          {
+            "id": "aiot-mini-program",
+            "script": "_sdkwork:client:mini-program:standalone",
+            "required": true,
+            "role": "client",
+            "runtimeTargets": [
+              "mini-program"
+            ],
+            "clientArchitectures": [
+              "mini-program"
+            ]
+          }
+        ],
+        "healthSurfaces": [
+          "application.public-ingress",
+          "edge.device-ingress"
+        ],
+        "browserDeliveries": [
+          {
+            "id": "aiot-adaptive-web",
+            "applicationRoot": "apps/sdkwork-aiot-pc",
+            "clientArchitectures": [
+              "pc-web",
+              "h5"
+            ],
+            "originMode": "same-origin",
+            "deliveryMode": "dev-server-proxy",
+            "clientProcessId": "aiot-browser",
+            "apiSurfaceId": "application.public-ingress",
+            "preserveCanonicalPaths": true,
+            "tabletArchitecture": "pc-web",
+            "renderers": {
+              "pc-web": {
+                "applicationRoot": "apps/sdkwork-aiot-pc",
+                "command": "pnpm",
+                "args": [
+                  "exec",
+                  "vite",
+                  "--host",
+                  "{host}",
+                  "--port",
+                  "{port}",
+                  "--strictPort"
+                ],
+                "defaultPort": 5175,
+                "portEnv": "SDKWORK_AIOT_PC_INTERNAL_DEV_PORT",
+                "env": {
+                  "VITE_SDKWORK_AIOT_APPLICATION_PUBLIC_HTTP_URL": "{httpOrigin}"
+                }
+              },
+              "h5": {
+                "applicationRoot": "apps/sdkwork-aiot-h5",
+                "command": "pnpm",
+                "args": [
+                  "exec",
+                  "vite",
+                  "--host",
+                  "{host}",
+                  "--port",
+                  "{port}",
+                  "--strictPort"
+                ],
+                "defaultPort": 5176,
+                "portEnv": "SDKWORK_AIOT_H5_INTERNAL_DEV_PORT",
+                "env": {
+                  "VITE_SDKWORK_AIOT_APPLICATION_PUBLIC_HTTP_URL": "{httpOrigin}"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "standalone.staging": {
+        "processes": [],
+        "healthSurfaces": [],
+        "browserDeliveries": []
+      },
+      "cloud.test": {
+        "processes": [
+          {
+            "id": "aiot-browser",
+            "role": "client",
+            "applicationRoot": "apps/sdkwork-aiot-pc",
+            "bindEnv": "SDKWORK_AIOT_WEB_DEV_INGRESS_BIND",
+            "runtimeTargets": [
+              "browser"
+            ],
+            "clientArchitectures": [
+              "pc-web",
+              "h5"
+            ],
+            "required": true
+          },
+          {
+            "id": "aiot-mini-program",
+            "script": "_sdkwork:client:mini-program:cloud",
+            "required": true,
+            "role": "client",
+            "runtimeTargets": [
+              "mini-program"
+            ],
+            "clientArchitectures": [
+              "mini-program"
+            ]
+          }
+        ],
+        "healthSurfaces": [
+          "application.public-ingress",
+          "platform.api-gateway",
+          "edge.device-ingress"
+        ],
+        "browserDeliveries": [
+          {
+            "id": "aiot-adaptive-web",
+            "applicationRoot": "apps/sdkwork-aiot-pc",
+            "clientArchitectures": [
+              "pc-web",
+              "h5"
+            ],
+            "originMode": "same-origin",
+            "deliveryMode": "dev-server-proxy",
+            "clientProcessId": "aiot-browser",
+            "apiSurfaceId": "application.public-ingress",
+            "preserveCanonicalPaths": true,
+            "tabletArchitecture": "pc-web",
+            "renderers": {
+              "pc-web": {
+                "applicationRoot": "apps/sdkwork-aiot-pc",
+                "command": "pnpm",
+                "args": [
+                  "exec",
+                  "vite",
+                  "--host",
+                  "{host}",
+                  "--port",
+                  "{port}",
+                  "--strictPort"
+                ],
+                "defaultPort": 5175,
+                "portEnv": "SDKWORK_AIOT_PC_INTERNAL_DEV_PORT",
+                "env": {
+                  "VITE_SDKWORK_AIOT_APPLICATION_PUBLIC_HTTP_URL": "{httpOrigin}"
+                }
+              },
+              "h5": {
+                "applicationRoot": "apps/sdkwork-aiot-h5",
+                "command": "pnpm",
+                "args": [
+                  "exec",
+                  "vite",
+                  "--host",
+                  "{host}",
+                  "--port",
+                  "{port}",
+                  "--strictPort"
+                ],
+                "defaultPort": 5176,
+                "portEnv": "SDKWORK_AIOT_H5_INTERNAL_DEV_PORT",
+                "env": {
+                  "VITE_SDKWORK_AIOT_APPLICATION_PUBLIC_HTTP_URL": "{httpOrigin}"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "cloud.staging": {
+        "processes": [],
+        "healthSurfaces": []
+      },
+      "standalone.demo": {
+        "processes": [],
+        "healthSurfaces": [],
+        "browserDeliveries": []
+      },
+      "cloud.demo": {
+        "processes": [],
+        "healthSurfaces": []
+      }
+    }
+  }
+}
