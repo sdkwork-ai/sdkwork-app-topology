@@ -1,3 +1,6 @@
+// WORKSPACE-PATH:allow-fixture - this file is a test fixture that simulates a foreign
+// checkout root, so the sdkwork-<name> segment below is the value under assertion rather
+// than a binding to a real sibling checkout. PORTABILITY_SPEC.md section 5.2 governs it.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -221,6 +224,56 @@ test('resolves pnpm through its JavaScript CLI on Windows without a shell', () =
   assert.deepEqual(
     platformLifecycleInvocation('pnpm', ['test'], { platform: 'linux' }),
     { command: 'pnpm', args: ['test'] },
+  );
+});
+
+test('spawns the native pnpm binary on Windows without a shell', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdkwork-pnpm-native-'));
+  const pnpmExe = path.join(root, 'pnpm.exe');
+  fs.writeFileSync(pnpmExe, '');
+
+  assert.deepEqual(
+    platformLifecycleInvocation('pnpm', ['run', 'dev:standalone'], {
+      platform: 'win32',
+      env: { npm_execpath: pnpmExe },
+      nodeExecutable: 'node.exe',
+    }),
+    { command: pnpmExe, args: ['run', 'dev:standalone'] },
+  );
+
+  const extensionless = path.join(root, 'pnpm');
+  fs.writeFileSync(extensionless, '');
+  assert.deepEqual(
+    platformLifecycleInvocation('pnpm', ['run', 'dev:standalone'], {
+      platform: 'win32',
+      env: { npm_execpath: extensionless },
+      nodeExecutable: 'node.exe',
+    }),
+    { command: extensionless, args: ['run', 'dev:standalone'] },
+  );
+});
+
+test('runs the pnpm ESM CLI through node on Windows and reports an actionable failure', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdkwork-pnpm-esm-'));
+  const pnpmMjs = path.join(root, 'pnpm.mjs');
+  fs.writeFileSync(pnpmMjs, '');
+
+  assert.deepEqual(
+    platformLifecycleInvocation('pnpm', ['run', 'check'], {
+      platform: 'win32',
+      env: { npm_execpath: pnpmMjs },
+      nodeExecutable: 'node.exe',
+    }),
+    { command: 'node.exe', args: [pnpmMjs, 'run', 'check'] },
+  );
+
+  assert.throws(
+    () => platformLifecycleInvocation('pnpm', ['run', 'check'], {
+      platform: 'win32',
+      env: { npm_execpath: path.join(root, 'missing-pnpm.exe') },
+      nodeExecutable: 'node.exe',
+    }),
+    /cannot resolve the pnpm executable for shell-free Windows lifecycle execution/u,
   );
 });
 

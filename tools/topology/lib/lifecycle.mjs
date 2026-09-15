@@ -58,22 +58,49 @@ export function resolveProcessInvocation(process) {
   return null;
 }
 
+const PNPM_JS_CLI_PATTERN = /(?:^|[\\/])pnpm(?:\.[cm])?js$/iu;
+const PNPM_NATIVE_CLI_PATTERN = /(?:^|[\\/])pnpm(?:\.exe)?$/iu;
+
+function firstExistingFile(candidates) {
+  return candidates.find((candidate) => typeof candidate === 'string'
+    && fs.existsSync(candidate)
+    && fs.statSync(candidate).isFile()) ?? null;
+}
+
 export function platformLifecycleInvocation(command, args, options = {}) {
   const platform = options.platform ?? process.platform;
   const env = options.env ?? process.env;
   const nodeExecutable = options.nodeExecutable ?? process.execPath;
   if (platform !== 'win32' || command !== 'pnpm') return { command, args };
-  const candidates = [
-    env.npm_execpath,
+
+  const execpath = typeof env.npm_execpath === 'string' ? env.npm_execpath : null;
+
+  // npm / corepack 安装形态：npm_execpath 指向 pnpm 的 JavaScript CLI（.cjs，pnpm 11 起
+  // 也可能是 .mjs）。Windows 上 .js 入口不可直接执行，必须交给 node。
+  if (execpath && PNPM_JS_CLI_PATTERN.test(execpath) && fs.existsSync(execpath)) {
+    return { command: nodeExecutable, args: [execpath, ...args] };
+  }
+
+  // standalone / `pnpm tools` / @pnpm/exe 安装形态：npm_execpath 指向原生可执行文件
+  // （`...\@pnpm\exe\pnpm.exe`，或 `.tools\pnpm\<version>\node_modules\pnpm\pnpm` 这种
+  // 不带扩展名的 44MB 二进制）。这类形态下 pnpm.cjs 根本不存在，也不需要用：
+  // shell:false 可直接 spawn 原生二进制。缺扩展名时补 .exe 再探一次。
+  if (execpath && PNPM_NATIVE_CLI_PATTERN.test(execpath)) {
+    const native = firstExistingFile([execpath, `${execpath}.exe`]);
+    if (native) return { command: native, args };
+  }
+
+  // 兜底：PNPM_HOME 或 node 安装目录下一层的 pnpm JavaScript CLI。
+  const fallback = firstExistingFile([
     env.PNPM_HOME ? path.join(env.PNPM_HOME, 'node_modules', 'pnpm', 'bin', 'pnpm.cjs') : null,
     path.join(path.dirname(nodeExecutable), 'node_modules', 'pnpm', 'bin', 'pnpm.cjs'),
-  ].filter((candidate) => typeof candidate === 'string'
-    && /(?:^|[\\/])pnpm(?:\.c)?js$/iu.test(candidate)
-    && fs.existsSync(candidate));
-  if (candidates.length === 0) {
-    throw new Error('cannot resolve pnpm.cjs for shell-free Windows lifecycle execution');
+  ]);
+  if (!fallback) {
+    throw new Error('cannot resolve the pnpm executable for shell-free Windows lifecycle execution: '
+      + 'npm_execpath is absent or points at nothing spawnable and no pnpm.cjs fallback exists; '
+      + 'reinstall pnpm with `npm i -g pnpm` or fix npm_execpath');
   }
-  return { command: nodeExecutable, args: [candidates[0], ...args] };
+  return { command: nodeExecutable, args: [fallback, ...args] };
 }
 
 export function spawnLifecycleCommand(command, args, options = {}) {
