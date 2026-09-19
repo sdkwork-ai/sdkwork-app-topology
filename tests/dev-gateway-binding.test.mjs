@@ -18,7 +18,10 @@ test('cloud.development binds platform gateway and gateway-attached origins to t
       SDKWORK_BACKEND_BASE_URL: 'https://api-dev.sdkwork.com/backend/v3/api',
       VITE_SDKWORK_AGENTS_APP_API_BASE_URL: 'https://agents-dev.sdkwork.com',
       VITE_SDKWORK_VOICE_APP_API_BASE_URL: 'https://voice-dev.sdkwork.com',
+      SDKWORK_IM_APPLICATION_PUBLIC_HTTP_URL: 'http://im-dev.sdkwork.com:3801',
       VITE_SDKWORK_IM_APPLICATION_PUBLIC_HTTP_URL: 'http://im-dev.sdkwork.com:3801',
+      SDKWORK_IM_APPLICATION_OPEN_HTTP_URL: 'http://im-open-dev.sdkwork.com:3802',
+      SDKWORK_IM_APPLICATION_BACKEND_HTTP_URL: 'http://im-admin-dev.sdkwork.com:3803',
       SDKWORK_IM_DEPLOYMENT_PROFILE: 'cloud',
     },
     { profileId: 'cloud.development' },
@@ -32,7 +35,26 @@ test('cloud.development binds platform gateway and gateway-attached origins to t
   // Non-gateway origins (separate services, own application edges) stay remote.
   assert.equal(env.VITE_SDKWORK_AGENTS_APP_API_BASE_URL, 'https://agents-dev.sdkwork.com');
   assert.equal(env.VITE_SDKWORK_VOICE_APP_API_BASE_URL, 'https://voice-dev.sdkwork.com');
-  assert.equal(env.VITE_SDKWORK_IM_APPLICATION_PUBLIC_HTTP_URL, 'http://im-dev.sdkwork.com:3801');
+  // Application-plane surface URLs are gateway-attached in a cloud profile
+  // (the platform gateway terminates the application plane), so the dev
+  // surface binds them to the local gateway too (PNPM_SCRIPT_SPEC §3).
+  assert.equal(env.SDKWORK_IM_APPLICATION_PUBLIC_HTTP_URL, LOCAL_GATEWAY);
+  assert.equal(env.VITE_SDKWORK_IM_APPLICATION_PUBLIC_HTTP_URL, LOCAL_GATEWAY);
+  assert.equal(env.SDKWORK_IM_APPLICATION_OPEN_HTTP_URL, LOCAL_GATEWAY);
+  assert.equal(env.SDKWORK_IM_APPLICATION_BACKEND_HTTP_URL, LOCAL_GATEWAY);
+  // Multi-token application codes (sdkwork-cloudrouter style) match too.
+  assert.equal(
+    applyDevelopmentLocalGatewayBinding(
+      {
+        [LOCAL_PLATFORM_API_GATEWAY_HTTP_URL_KEY]: LOCAL_GATEWAY,
+        SDKWORK_CLOUDROUTER_PLATFORM_API_GATEWAY_HTTP_URL: 'https://api-dev.sdkwork.com',
+        SDKWORK_CLOUDROUTER_ROUTER_APPLICATION_PUBLIC_HTTP_URL: 'http://router-dev.sdkwork.com:3905',
+        VITE_SDKWORK_CLOUDROUTER_ROUTER_APPLICATION_OPEN_HTTP_URL: 'http://router-dev.sdkwork.com:3905',
+      },
+      { profileId: 'cloud.development' },
+    ).SDKWORK_CLOUDROUTER_ROUTER_APPLICATION_PUBLIC_HTTP_URL,
+    LOCAL_GATEWAY,
+  );
 });
 
 test('only cloud.development profiles are rewritten', () => {

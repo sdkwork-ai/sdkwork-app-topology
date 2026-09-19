@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import {
   createTopologyRuntime,
   loadTopologySpec,
+  resolveTopologyLocation,
   validateTopologySpec,
 } from '../tools/topology/lib/index.mjs';
 import { writeEnvFile } from '../tools/topology/lib/env-file.mjs';
@@ -15,6 +16,20 @@ import { writeEnvFile } from '../tools/topology/lib/env-file.mjs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const FRAMEWORK_ROOT = path.resolve(__dirname, '..');
+
+function resolveSpecLocation(appRoot, args) {
+  const root = path.resolve(appRoot);
+  const explicitSpec = resolveOption(args, '--spec');
+  if (explicitSpec) {
+    return { specPath: path.resolve(root, explicitSpec), topologyRoot: root, inherited: false };
+  }
+  return resolveTopologyLocation(root);
+}
+
+function describeSpecLocation(appRoot, location) {
+  const relative = path.relative(path.resolve(appRoot), location.specPath);
+  return (relative && !relative.startsWith('..') ? relative : location.specPath).replaceAll('\\', '/');
+}
 
 async function main() {
   const [command, ...args] = process.argv.slice(2);
@@ -24,34 +39,33 @@ async function main() {
   }
 
   if (command === 'validate') {
-    const specPath = resolveOption(args, '--spec') ?? 'specs/topology.spec.json';
     const appRoot = resolveOption(args, '--root') ?? process.cwd();
-    const spec = loadTopologySpec(path.resolve(appRoot, specPath));
-    console.log(`[sdkwork-topology] valid ${spec.appId} (${specPath})`);
+    const location = resolveSpecLocation(appRoot, args);
+    const spec = loadTopologySpec(location.specPath);
+    console.log(`[sdkwork-topology] valid ${spec.appId} (${describeSpecLocation(appRoot, location)})`);
     return;
   }
 
   if (command === 'print-matrix') {
-    const specPath = resolveOption(args, '--spec') ?? 'specs/topology.spec.json';
     const appRoot = resolveOption(args, '--root') ?? process.cwd();
     const profile = resolveOption(args, '--profile') ?? 'all';
-    const spec = loadTopologySpec(path.resolve(appRoot, specPath));
-    const runtime = createTopologyRuntime(spec, appRoot);
+    const location = resolveSpecLocation(appRoot, args);
+    const spec = loadTopologySpec(location.specPath);
+    const runtime = createTopologyRuntime(spec, location.topologyRoot, location.specPath);
     const targets = runtime.listPackageTargetsByProfile(profile);
     console.log(JSON.stringify({ appId: spec.appId, profile, targets }, null, 2));
     return;
   }
 
   if (command === 'plan') {
-    const specPath = resolveOption(args, '--spec') ?? 'specs/topology.spec.json';
     const appRoot = path.resolve(resolveOption(args, '--root') ?? process.cwd());
     const deploymentProfile = resolveOption(args, '--deployment-profile') ?? 'standalone';
     const environment = resolveOption(args, '--environment') ?? 'development';
     const runtimeTarget = resolveOption(args, '--runtime-target') ?? 'browser';
     const clientArchitecture = resolveOption(args, '--client-architecture');
-    const resolvedSpecPath = path.resolve(appRoot, specPath);
-    const spec = loadTopologySpec(resolvedSpecPath);
-    const runtime = createTopologyRuntime(spec, appRoot, resolvedSpecPath);
+    const location = resolveSpecLocation(appRoot, args);
+    const spec = loadTopologySpec(location.specPath);
+    const runtime = createTopologyRuntime(spec, location.topologyRoot, location.specPath);
     if (typeof runtime.resolvePlan !== 'function') throw new Error('resolved plans require topology schemaVersion 5');
     const plan = runtime.resolvePlan(`${deploymentProfile}.${environment}`, runtimeTarget, clientArchitecture);
     if (plan.forbiddenProcesses.length > 0) {

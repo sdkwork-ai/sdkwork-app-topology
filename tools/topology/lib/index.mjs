@@ -110,3 +110,9 @@ export {
   CANONICAL_DEV_CLOUD_DATABASE,
   CANONICAL_PRODUCTION_CLOUD_DATABASE,
 } from './cloud-database.mjs';
+
+export {
+  DEPLOYMENT_CONFIG_RELATIVE_PATH,
+  TOPOLOGY_SPEC_RELATIVE_PATH,
+  resolveTopologyLocation,
+} from './topology-location.mjs';

@@ -16,6 +16,11 @@ import { parseProfileId } from './profile-id.mjs';
  * the local gateway origin:
  *
  * - keys ending in PLATFORM_API_GATEWAY_HTTP_URL (SDKWORK_ and VITE_ forms);
+ * - the application-plane surface URL keys declared by the topology spec
+ *   (`..._APPLICATION_(PUBLIC|OPEN|BACKEND)_HTTP_URL`, SDKWORK_ and VITE_
+ *   forms): in a cloud profile the application plane is terminated by the
+ *   platform gateway (APP_RUNTIME_TOPOLOGY_SPEC §3), so its dev-surface URLs
+ *   are gateway-attached by construction;
  * - any other URL entry whose host equals the deployed platform gateway host
  *   (SDK base URLs, open API base URLs, backend base URLs that are
  *   gateway-anchored by construction; host comparison is scheme-insensitive so
@@ -29,6 +34,8 @@ export const BROWSER_LOCAL_PLATFORM_API_GATEWAY_HTTP_URL_KEY =
   'VITE_SDKWORK_LOCAL_PLATFORM_API_GATEWAY_HTTP_URL';
 
 const PLATFORM_API_GATEWAY_URL_KEY_PATTERN = /(?:^|_)PLATFORM_API_GATEWAY_HTTP_URL$/u;
+const APPLICATION_SURFACE_URL_KEY_PATTERN =
+  /(?:^|VITE_)SDKWORK_[A-Z0-9_]+_APPLICATION_(?:PUBLIC|OPEN|BACKEND)_HTTP_URL$/u;
 const REWRITABLE_URL_VALUE_PATTERN = /^(?:https?|wss?):\/\//iu;
 
 function parseUrlHost(value) {
@@ -98,7 +105,8 @@ export function applyDevelopmentLocalGatewayBinding(env, { profileId } = {}) {
       continue;
     }
     const isGatewayKey = PLATFORM_API_GATEWAY_URL_KEY_PATTERN.test(key);
-    if (!isGatewayKey && host !== gatewayHost) {
+    const isApplicationSurfaceKey = APPLICATION_SURFACE_URL_KEY_PATTERN.test(key);
+    if (!isGatewayKey && !isApplicationSurfaceKey && host !== gatewayHost) {
       continue;
     }
     const parsedUrl = new URL(value);

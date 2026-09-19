@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import { resolveDeclaredAccessEndpoints } from './access-endpoints.mjs';
+import { LOCAL_PLATFORM_API_GATEWAY_HTTP_URL_KEY } from './dev-gateway-binding.mjs';
 import { resolveOwnedBindings } from './development-ownership.mjs';
 import { normalizeText } from './env-file.mjs';
 import { resolveProcessInvocation } from './lifecycle.mjs';
@@ -85,6 +86,22 @@ function urlOrigin(value, label) {
     return url.origin;
   } catch {
     throw new Error(`${label} must resolve to an absolute HTTP(S) URL`);
+  }
+}
+
+/**
+ * APP_RUNTIME_TOPOLOGY_SPEC §4.2: `dev:cloud` binds the local platform gateway
+ * (ip:port) through SDKWORK_LOCAL_PLATFORM_API_GATEWAY_HTTP_URL. A loopback
+ * surface URL equal to that anchor is the sanctioned dev-process binding, not
+ * a leaked development default.
+ */
+function isLocalPlatformGatewayAnchor(value, profileEnv) {
+  const anchor = normalizeText(profileEnv[LOCAL_PLATFORM_API_GATEWAY_HTTP_URL_KEY]);
+  if (!anchor) return false;
+  try {
+    return urlOrigin(value, 'surface URL') === urlOrigin(anchor, LOCAL_PLATFORM_API_GATEWAY_HTTP_URL_KEY);
+  } catch {
+    return false;
   }
 }
 
@@ -286,7 +303,9 @@ export function createResolvedRuntimePlan(
     }
     const tunnel = processes.some((process) => process.role === 'tunnel');
     for (const [surfaceId, value] of Object.entries(resolvedBaseUrls)) {
-      if (!remoteUrl(value) && !tunnel) throw new Error(`${profileId} ${surfaceId} must use a deployed URL or explicit tunnel`);
+      if (remoteUrl(value) || tunnel) continue;
+      if (isLocalPlatformGatewayAnchor(value, profileEnv)) continue;
+      throw new Error(`${profileId} ${surfaceId} must use a deployed URL or explicit tunnel`);
     }
   }
   const accessEndpoints = resolveDeclaredAccessEndpoints({

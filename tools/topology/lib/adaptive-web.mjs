@@ -398,6 +398,35 @@ function rendererSourceExists(applicationRoot) {
   }
 }
 
+/**
+ * Forward a renderer output stream line by line under an explicit tag.
+ *
+ * Renderer listeners are private client tooling (APP_RUNTIME_TOPOLOGY_SPEC
+ * §8.2): tagging their output keeps the console's only untagged browser entry
+ * on the adaptive ingress origin instead of surfacing the internal Vite
+ * renderer ports as if they were second access URLs.
+ */
+function forwardTaggedRendererStream(stream, tag, write) {
+  if (!stream) return;
+  let buffered = '';
+  stream.setEncoding('utf8');
+  stream.on('data', (chunk) => {
+    buffered += chunk;
+    let newlineIndex = buffered.indexOf('\n');
+    while (newlineIndex >= 0) {
+      const line = buffered.slice(0, newlineIndex).replace(/\r$/u, '');
+      buffered = buffered.slice(newlineIndex + 1);
+      if (line) write(`[${tag}] ${line}\n`);
+      newlineIndex = buffered.indexOf('\n');
+    }
+  });
+  stream.once('end', () => {
+    const trailing = buffered.trim();
+    if (trailing) write(`[${tag}] ${trailing}\n`);
+  });
+  stream.once('error', () => {});
+}
+
 function substituteInvocationArgs(args, { host, port }) {
   return (args ?? []).map((value) => String(value)
     .replaceAll('{port}', String(port))
@@ -434,7 +463,10 @@ function buildRendererEnvironment({ env, renderer, delivery, runtime }) {
   return rendererEnv;
 }
 
-export function spawnWebRenderer({ runtime, delivery, renderer, env }) {
+export function spawnWebRenderer({ runtime, delivery, renderer, env, report = {
+  stdout: () => {},
+  stderr: () => {},
+} }) {
   const applicationRoot = path.resolve(runtime.repoRoot, renderer.applicationRoot);
   if (!rendererSourceExists(applicationRoot)) {
     return undefined;
@@ -448,7 +480,11 @@ export function spawnWebRenderer({ runtime, delivery, renderer, env }) {
     env: buildRendererEnvironment({ env, renderer, delivery, runtime }),
     processId: `${delivery.id}:${renderer.architecture}`,
     processRole: 'web-renderer',
+    stdio: ['ignore', 'pipe', 'pipe'],
   });
+  const outputTag = `renderer ${renderer.architecture}`;
+  forwardTaggedRendererStream(child.stdout, outputTag, (line) => report.stdout(line));
+  forwardTaggedRendererStream(child.stderr, outputTag, (line) => report.stderr(line));
   return {
     architecture: renderer.architecture,
     label: renderer.label,
@@ -520,7 +556,7 @@ export async function startAdaptiveWebDelivery({
   const bind = parseTcpBinding(env[clientProcess.bindEnv], clientProcess.bindEnv);
   const renderers = new Map();
   for (const renderer of delivery.renderers) {
-    const spawned = spawnWebRenderer({ runtime, delivery, renderer, env });
+    const spawned = spawnWebRenderer({ runtime, delivery, renderer, env, report });
     if (!spawned) {
       report.stderr(
         `${renderer.applicationRoot} source is unavailable; using the other renderer`,
