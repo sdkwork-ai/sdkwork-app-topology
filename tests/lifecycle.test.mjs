@@ -688,8 +688,8 @@ test('doctor validates manifest, source config, topology, workflow, and deploy c
       clean: `${facade} clean`,
     },
   }, null, 2));
-  fs.writeFileSync(path.join(repoRoot, 'sdkwork.workflow.json'), JSON.stringify({
-    schemaVersion: '2026-06-06.sdkwork.workflow.v1',
+  fs.writeFileSync(path.join(repoRoot, 'agent.workflow.json'), JSON.stringify({
+    schemaVersion: '2026-06-06.agent.workflow.v1',
     app: { id: 'sdkwork-drive', repository: 'sdkwork-ai/sdkwork-drive' },
     release: { artifactPrefix: 'sdkwork-drive', defaultVersion: '1.0.0' },
     targets: [{
@@ -744,7 +744,7 @@ test('doctor validates manifest, source config, topology, workflow, and deploy c
     "fs.appendFileSync(process.env.SDKWORK_STANDARD_CHECK_LOG, `${process.argv.slice(2).join(' ')}\\n`);",
     '',
   ].join('\n'));
-  process.env[workflowKey] = path.resolve('..', 'sdkwork-github-workflow', 'scripts', 'sdkwork-workflow.mjs');
+  process.env[workflowKey] = path.resolve('..', 'sdkwork-github-workflow', 'scripts', 'agent-workflow.mjs');
   process.env[deployKey] = path.resolve('..', 'sdkwork-specs', 'tools', 'deployctl.mjs');
   process.env[appManifestCheckKey] = standardCheckStub;
   process.env[sourceConfigCheckKey] = standardCheckStub;

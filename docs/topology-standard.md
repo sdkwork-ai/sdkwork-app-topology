@@ -13,7 +13,7 @@ The framework resolves these authorities in order:
 2. `specs/topology.spec.json` for surfaces, processes, roles, and profile files.
 3. `etc/topology/<profile-id>.env` for concrete URLs, binds, and environment values.
 4. `package.json` private `_sdkwork:*` hooks or process commands for application-specific execution.
-5. `sdkwork.workflow.json` for package, publish, and CI deployment lifecycle.
+5. `agent.workflow.json` for package, publish, and CI deployment lifecycle.
 6. `deployments/deploy.yaml` for deployment execution.
 
 No framework layer owns application-specific source paths, Cargo workspace

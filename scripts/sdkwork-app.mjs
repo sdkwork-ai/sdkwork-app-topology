@@ -39,7 +39,7 @@ import { startAdaptiveWebDelivery } from '../tools/topology/lib/adaptive-web.mjs
 
 const FRAMEWORK_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const WORKSPACE_ROOT = path.resolve(FRAMEWORK_ROOT, '..');
-const DEFAULT_WORKFLOW_CLI = path.join(WORKSPACE_ROOT, 'sdkwork-github-workflow', 'scripts', 'sdkwork-workflow.mjs');
+const DEFAULT_WORKFLOW_CLI = path.join(WORKSPACE_ROOT, 'sdkwork-github-workflow', 'scripts', 'agent-workflow.mjs');
 const DEFAULT_DEPLOY_CLI = path.join(WORKSPACE_ROOT, 'sdkwork-specs', 'tools', 'deployctl.mjs');
 const DEFAULT_APP_MANIFEST_CHECK_CLI = path.join(WORKSPACE_ROOT, 'sdkwork-specs', 'tools', 'check-app-manifest-standard.mjs');
 const DEFAULT_SOURCE_CONFIG_CHECK_CLI = path.join(WORKSPACE_ROOT, 'sdkwork-specs', 'tools', 'check-source-config-standard.mjs');
@@ -878,8 +878,8 @@ async function runWorkflow(repoRoot, command, args) {
   if (!fs.existsSync(workflowCli)) {
     throw new Error(`missing workflow framework: ${workflowCli}; set SDKWORK_GITHUB_WORKFLOW_CLI for a non-workspace installation`);
   }
-  const config = path.join(repoRoot, 'sdkwork.workflow.json');
-  if (!fs.existsSync(config)) throw new Error('sdkwork.workflow.json is required');
+  const config = path.join(repoRoot, 'agent.workflow.json');
+  if (!fs.existsSync(config)) throw new Error('agent.workflow.json is required');
   await runCommand(process.execPath, [workflowCli, command, '--config', config, ...args], repoRoot);
 }
 
@@ -998,7 +998,7 @@ async function main(argv = process.argv.slice(2)) {
     await runStandardCheck(repoRoot, 'SDKWORK_SOURCE_CONFIG_CHECK_CLI', DEFAULT_SOURCE_CONFIG_CHECK_CLI);
     await runStandardCheck(repoRoot, 'SDKWORK_ADAPTIVE_WEB_CHECK_CLI', DEFAULT_ADAPTIVE_WEB_CHECK_CLI);
     loadRuntime(repoRoot);
-    if (fs.existsSync(path.join(repoRoot, 'sdkwork.workflow.json'))) {
+    if (fs.existsSync(path.join(repoRoot, 'agent.workflow.json'))) {
       await runWorkflow(repoRoot, 'validate', []);
     }
     if (fs.existsSync(path.join(repoRoot, 'deployments', 'deploy.yaml'))) {

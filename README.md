@@ -32,7 +32,7 @@ agent.app.config.json
 package.json
 specs/topology.spec.json
 etc/topology/<deployment-profile>.<environment>.env
-sdkwork.workflow.json                  # when packaged or published
+agent.workflow.json                  # when packaged or published
 deployments/deploy.yaml                # when deployed by deployctl
 ```
 
