@@ -28,7 +28,7 @@ The global authorities remain:
 Each deployable application root owns:
 
 ```text
-sdkwork.app.config.json
+agent.app.config.json
 package.json
 specs/topology.spec.json
 etc/topology/<deployment-profile>.<environment>.env

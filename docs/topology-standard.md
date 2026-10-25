@@ -9,7 +9,7 @@ framework implementation.
 
 The framework resolves these authorities in order:
 
-1. `sdkwork.app.config.json` for application identity and supported profiles.
+1. `agent.app.config.json` for application identity and supported profiles.
 2. `specs/topology.spec.json` for surfaces, processes, roles, and profile files.
 3. `etc/topology/<profile-id>.env` for concrete URLs, binds, and environment values.
 4. `package.json` private `_sdkwork:*` hooks or process commands for application-specific execution.

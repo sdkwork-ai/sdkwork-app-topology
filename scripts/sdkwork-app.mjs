@@ -284,7 +284,7 @@ function findNearestApplicationRoot(startPath, repoRoot) {
     throw new Error(`client path must stay within repository root: ${startPath}`);
   }
   while (current === boundary || current.startsWith(`${boundary}${path.sep}`)) {
-    if (fs.existsSync(path.join(current, 'sdkwork.app.config.json'))) {
+    if (fs.existsSync(path.join(current, 'agent.app.config.json'))) {
       return current;
     }
     if (current === boundary) {
@@ -338,8 +338,8 @@ function resolveClientApplicationRoot(repoRoot, entry) {
   if (applicationRoot !== boundary && !applicationRoot.startsWith(`${boundary}${path.sep}`)) {
     throw new Error(`client applicationRoot must stay within repository root: ${entry.applicationRoot}`);
   }
-  if (!fs.existsSync(path.join(applicationRoot, 'sdkwork.app.config.json'))) {
-    throw new Error(`client applicationRoot is missing sdkwork.app.config.json: ${applicationRoot}`);
+  if (!fs.existsSync(path.join(applicationRoot, 'agent.app.config.json'))) {
+    throw new Error(`client applicationRoot is missing agent.app.config.json: ${applicationRoot}`);
   }
   return applicationRoot;
 }

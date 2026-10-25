@@ -57,7 +57,7 @@ async function main() {
   const appId = spec.appId ?? path.basename(repoRoot);
   const configFiles = resolveCloudConfigFiles(spec, repoRoot);
 
-  const manifestPath = path.join(repoRoot, 'sdkwork.app.config.json');
+  const manifestPath = path.join(repoRoot, 'agent.app.config.json');
   const manifest = existsSync(manifestPath)
     ? JSON.parse(await readFile(manifestPath, 'utf8'))
     : {};

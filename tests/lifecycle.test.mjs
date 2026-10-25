@@ -349,9 +349,9 @@ test('resolves independent client application roots explicitly', () => {
   const h5Root = path.join(repoRoot, 'apps', 'demo-h5');
   fs.mkdirSync(pcRoot, { recursive: true });
   fs.mkdirSync(h5Root, { recursive: true });
-  fs.writeFileSync(path.join(repoRoot, 'sdkwork.app.config.json'), '{}');
-  fs.writeFileSync(path.join(pcRoot, 'sdkwork.app.config.json'), '{}');
-  fs.writeFileSync(path.join(h5Root, 'sdkwork.app.config.json'), '{}');
+  fs.writeFileSync(path.join(repoRoot, 'agent.app.config.json'), '{}');
+  fs.writeFileSync(path.join(pcRoot, 'agent.app.config.json'), '{}');
+  fs.writeFileSync(path.join(h5Root, 'agent.app.config.json'), '{}');
 
   assert.equal(
     resolveClientApplicationRoot(repoRoot, { applicationRoot: 'apps/demo-pc', role: 'client' }),
@@ -380,7 +380,7 @@ test('builds private per-application client environments without public token al
     "import fs from 'node:fs';",
     "import path from 'node:path';",
     'export function mergeRepoBootstrapAccessTokenEnv({ repoRoot, env, environment, runtimeTarget }) {',
-    "  const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, 'sdkwork.app.config.json'), 'utf8'));",
+    "  const manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, 'agent.app.config.json'), 'utf8'));",
     "  const configured = String(env.SDKWORK_ACCESS_TOKEN ?? '').trim();",
     '  return {',
     '    ...env,',
@@ -394,7 +394,7 @@ test('builds private per-application client environments without public token al
     const appRoot = path.join(repoRoot, 'apps', appId);
     fs.mkdirSync(appRoot, { recursive: true });
     fs.writeFileSync(path.join(appRoot, 'package.json'), JSON.stringify({ name: `@sdkwork/${appId}` }));
-    fs.writeFileSync(path.join(appRoot, 'sdkwork.app.config.json'), JSON.stringify({ app: { key: appId } }));
+    fs.writeFileSync(path.join(appRoot, 'agent.app.config.json'), JSON.stringify({ app: { key: appId } }));
   }
 
   const plan = { environment: 'development', runtimeTarget: 'browser' };
@@ -426,7 +426,7 @@ test('lifecycle start/build reuse a registered overlay token and reject remote f
     'signature',
   ].join('.');
   fs.writeFileSync(path.join(repoRoot, 'package.json'), JSON.stringify({ name: 'demo-app' }));
-  fs.writeFileSync(path.join(repoRoot, 'sdkwork.app.config.json'), JSON.stringify({ app: { key: 'demo' } }));
+  fs.writeFileSync(path.join(repoRoot, 'agent.app.config.json'), JSON.stringify({ app: { key: 'demo' } }));
   fs.writeFileSync(path.join(repoRoot, '.sdkwork.local.env'), 'SDKWORK_ACCESS_TOKEN=signed-dev-token\r\n', 'utf8');
 
   assert.equal(isUsableLifecycleAccessToken(fixture, 'http://api-dev.birdcoder.com'), false);
@@ -467,7 +467,7 @@ test('workspace bootstrap profile fills blank backend URL without overriding pro
 test('prepareLifecycleAccessTokenEnv keeps an explicit backend URL', async () => {
   const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'sdkwork-prepare-token-'));
   fs.writeFileSync(path.join(repoRoot, 'package.json'), JSON.stringify({ name: 'demo-app' }));
-  fs.writeFileSync(path.join(repoRoot, 'sdkwork.app.config.json'), JSON.stringify({ app: { key: 'demo' } }));
+  fs.writeFileSync(path.join(repoRoot, 'agent.app.config.json'), JSON.stringify({ app: { key: 'demo' } }));
   fs.writeFileSync(path.join(repoRoot, '.sdkwork.local.env'), 'SDKWORK_ACCESS_TOKEN=signed-dev-token\n', 'utf8');
   const env = await prepareLifecycleAccessTokenEnv(
     repoRoot,
