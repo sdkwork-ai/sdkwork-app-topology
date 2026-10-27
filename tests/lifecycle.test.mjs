@@ -778,7 +778,7 @@ test('release publication cannot bypass the workflow contract through a private 
   }));
   await assert.rejects(
     () => main(['release:publish', '--root', repoRoot, '--target-id', 'web-universal-cloud-browser-web-url']),
-    /sdkwork\.workflow\.json is required/u,
+    /agent\.workflow\.json is required/u,
   );
 });
 
