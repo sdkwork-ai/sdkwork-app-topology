@@ -418,7 +418,7 @@ test('builds private per-application client environments without public token al
   assert.equal(h5Env.VITE_ACCESS_TOKEN, undefined);
 });
 
-test('lifecycle start/build reuse a registered overlay token and reject remote fixture JWTs', async () => {
+test('lifecycle start/build reuse a registered overlay token and allow development fixtures', async () => {
   const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'sdkwork-lifecycle-token-'));
   const fixture = [
     Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url'),
@@ -429,13 +429,24 @@ test('lifecycle start/build reuse a registered overlay token and reject remote f
   fs.writeFileSync(path.join(repoRoot, 'agent.app.config.json'), JSON.stringify({ app: { key: 'demo' } }));
   fs.writeFileSync(path.join(repoRoot, '.sdkwork.local.env'), 'SDKWORK_ACCESS_TOKEN=signed-dev-token\r\n', 'utf8');
 
-  assert.equal(isUsableLifecycleAccessToken(fixture, 'http://api-dev.birdcoder.com'), false);
-  assert.equal(isUsableLifecycleAccessToken(fixture, 'http://127.0.0.1:8080'), true);
+  // ENVIRONMENT_SPEC section 6.1: development may use a disposable fixture
+  // wherever its gateway lives; other tiers keep the loopback requirement.
+  assert.equal(isUsableLifecycleAccessToken(fixture, 'http://api-dev.birdcoder.com', 'development'), true);
+  assert.equal(isUsableLifecycleAccessToken(fixture, 'http://api-dev.birdcoder.com', 'test'), false);
+  assert.equal(isUsableLifecycleAccessToken(fixture, 'http://127.0.0.1:8080', 'test'), true);
   assert.equal(readLocalBootstrapAccessToken(repoRoot, 'development'), 'signed-dev-token');
+
+  const remoteFixture = await applyLifecycleBootstrapAccessToken(
+    repoRoot,
+    { SDKWORK_BACKEND_BASE_URL: 'http://api-dev.birdcoder.com', SDKWORK_ACCESS_TOKEN: fixture },
+    'development',
+    { tryApplicationBootstrap: false },
+  );
+  assert.equal(remoteFixture.SDKWORK_ACCESS_TOKEN, fixture);
 
   const remote = await applyLifecycleBootstrapAccessToken(
     repoRoot,
-    { SDKWORK_BACKEND_BASE_URL: 'http://api-dev.birdcoder.com', SDKWORK_ACCESS_TOKEN: fixture },
+    { SDKWORK_BACKEND_BASE_URL: 'http://api-dev.birdcoder.com' },
     'development',
     { tryApplicationBootstrap: false },
   );

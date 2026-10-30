@@ -508,27 +508,68 @@ function isLoopbackBackendUrl(url) {
   }
 }
 
-function isUsableLifecycleAccessToken(token, backendBaseUrl) {
+function decodeJwtPayload(token) {
+  const parts = String(token ?? '').split('.');
+  if (parts.length !== 3) return undefined;
+  try {
+    const normalized = parts[1].replaceAll('-', '+').replaceAll('_', '/');
+    const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=');
+    const payload = JSON.parse(Buffer.from(padded, 'base64').toString('utf8'));
+    return payload && typeof payload === 'object' && !Array.isArray(payload) ? payload : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function normalizeLifecycle(value) {
+  const normalized = String(value ?? '').trim().toLowerCase();
+  if (normalized === 'dev' || normalized === 'local') return 'development';
+  if (normalized === 'prod') return 'production';
+  return normalized || undefined;
+}
+
+function isUsableLifecycleAccessToken(token, backendBaseUrl, environment) {
   const trimmed = String(token ?? '').trim();
   if (!trimmed) {
     return false;
   }
   if (!looksLikeLocalFixtureJwt(trimmed)) {
+    const payload = decodeJwtPayload(trimmed);
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    if (typeof payload?.exp === 'number' && nowSeconds >= payload.exp - 300) {
+      return false;
+    }
+    if (typeof payload?.nbf === 'number' && nowSeconds < payload.nbf - 300) {
+      return false;
+    }
+    const requested = normalizeLifecycle(environment);
+    const claimed = normalizeLifecycle(payload?.environment);
+    if (requested && claimed && requested !== claimed) {
+      return false;
+    }
     return true;
   }
-  return isLoopbackBackendUrl(backendBaseUrl);
+  const requested = normalizeLifecycle(environment);
+  if (requested === 'staging' || requested === 'production') {
+    return false;
+  }
+  if (requested && requested !== 'development' && !isLoopbackBackendUrl(backendBaseUrl)) {
+    return false;
+  }
+  return isLoopbackBackendUrl(backendBaseUrl) || requested === 'development';
 }
 
-function readLocalBootstrapAccessToken(repoRoot, environment) {
+function readLocalBootstrapAccessToken(repoRoot, environment, deploymentProfile = 'standalone') {
   const lifecycle = environment === 'dev'
     ? 'development'
     : environment === 'prod'
       ? 'production'
       : environment;
   const candidates = [
-    path.join(repoRoot, '.sdkwork.local.env'),
+    path.join(repoRoot, `.env.${deploymentProfile}.${lifecycle}.bootstrap.local`),
     path.join(repoRoot, `.env.standalone.${lifecycle}.bootstrap.local`),
     path.join(repoRoot, `.env.${lifecycle}.bootstrap.local`),
+    path.join(repoRoot, '.sdkwork.local.env'),
   ];
   for (const filePath of candidates) {
     if (!fs.existsSync(filePath)) continue;
@@ -567,10 +608,38 @@ async function tryEnsureRegisteredBootstrapToken(repoRoot, env, environment) {
 
 async function applyLifecycleBootstrapAccessToken(repoRoot, env, environment, extra = {}) {
   const merged = { ...env };
+  if (extra.deploymentProfile === 'cloud' || extra.deploymentProfile === 'standalone') {
+    merged.SDKWORK_DEPLOYMENT_PROFILE = extra.deploymentProfile;
+  }
   const backendBaseUrl = String(merged.SDKWORK_BACKEND_BASE_URL ?? '').trim();
-  if (!isUsableLifecycleAccessToken(merged.SDKWORK_ACCESS_TOKEN, backendBaseUrl)) {
-    const fromFiles = readLocalBootstrapAccessToken(repoRoot, environment);
-    if (isUsableLifecycleAccessToken(fromFiles, backendBaseUrl)) {
+  const deploymentProfile = String(merged.SDKWORK_DEPLOYMENT_PROFILE ?? '').trim() === 'cloud'
+    ? 'cloud'
+    : 'standalone';
+  const credentialEntry = await loadCredentialEntryBootstrap(repoRoot);
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(path.join(repoRoot, 'agent.app.config.json'), 'utf8'));
+  } catch {
+    manifest = undefined;
+  }
+  const isReusable = (token) => {
+    if (typeof credentialEntry?.isBootstrapAccessTokenReusable === 'function') {
+      return credentialEntry.isBootstrapAccessTokenReusable(token, {
+        environment,
+        ...(backendBaseUrl ? { backendBaseUrl } : {}),
+        ...(manifest ? { manifest } : {}),
+      });
+    }
+    return isUsableLifecycleAccessToken(token, backendBaseUrl, environment);
+  };
+  if (!isReusable(merged.SDKWORK_ACCESS_TOKEN)) {
+    const fromFiles = credentialEntry?.readRepoBootstrapAccessToken?.(repoRoot, environment, {
+      environment,
+      deploymentProfile,
+      ...(backendBaseUrl ? { backendBaseUrl } : {}),
+      ...(manifest ? { manifest } : {}),
+    }) ?? readLocalBootstrapAccessToken(repoRoot, environment, deploymentProfile);
+    if (isReusable(fromFiles)) {
       merged.SDKWORK_ACCESS_TOKEN = fromFiles;
     } else if (merged.SDKWORK_ACCESS_TOKEN && looksLikeLocalFixtureJwt(merged.SDKWORK_ACCESS_TOKEN)) {
       delete merged.SDKWORK_ACCESS_TOKEN;
@@ -580,29 +649,32 @@ async function applyLifecycleBootstrapAccessToken(repoRoot, env, environment, ex
   if (
     extra.tryApplicationBootstrap !== false
     && backendBaseUrl
-    && !isUsableLifecycleAccessToken(merged.SDKWORK_ACCESS_TOKEN, backendBaseUrl)
+    && !isReusable(merged.SDKWORK_ACCESS_TOKEN)
   ) {
     const ensured = await tryEnsureRegisteredBootstrapToken(repoRoot, merged, environment);
-    if (isUsableLifecycleAccessToken(ensured?.token, backendBaseUrl)) {
+    if (isReusable(ensured?.token)) {
       merged.SDKWORK_ACCESS_TOKEN = ensured.token;
       return merged;
     }
   }
 
-  if (isUsableLifecycleAccessToken(merged.SDKWORK_ACCESS_TOKEN, backendBaseUrl)) {
+  if (isReusable(merged.SDKWORK_ACCESS_TOKEN)) {
     return merged;
   }
 
-  const credentialEntry = await loadCredentialEntryBootstrap(repoRoot);
   if (credentialEntry?.mergeRepoBootstrapAccessTokenEnv) {
     const next = credentialEntry.mergeRepoBootstrapAccessTokenEnv({
       repoRoot,
       env: merged,
       environment,
+      deploymentProfile,
       ...extra,
     });
     const nextBackend = String(next.SDKWORK_BACKEND_BASE_URL ?? backendBaseUrl).trim();
-    if (isUsableLifecycleAccessToken(next.SDKWORK_ACCESS_TOKEN, nextBackend)) {
+    if (isReusable(next.SDKWORK_ACCESS_TOKEN)) {
+      return next;
+    }
+    if (nextBackend !== backendBaseUrl && isUsableLifecycleAccessToken(next.SDKWORK_ACCESS_TOKEN, nextBackend, environment)) {
       return next;
     }
     if (next.SDKWORK_ACCESS_TOKEN && looksLikeLocalFixtureJwt(next.SDKWORK_ACCESS_TOKEN)) {
@@ -1033,6 +1105,7 @@ async function main(argv = process.argv.slice(2)) {
       repoRoot,
       { ...process.env, ...regionEnv },
       environment,
+      { deploymentProfile: option(forwarded, '--deployment-profile', 'standalone') },
     );
     const result = await runPrivateLifecycleScript(repoRoot, packageManifest, script, forwarded, { env });
     if (!result) throw new Error(`missing private lifecycle hook ${script}`);
