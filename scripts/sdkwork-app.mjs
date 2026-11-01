@@ -36,6 +36,11 @@ import {
   validateLifecyclePackage,
 } from '../tools/topology/lib/lifecycle.mjs';
 import { startAdaptiveWebDelivery } from '../tools/topology/lib/adaptive-web.mjs';
+import {
+  credentialBundlePath,
+  readCredentialBundleToken,
+  resolveApplicationCode,
+} from '../tools/topology/lib/credential-bundle.mjs';
 
 const FRAMEWORK_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const WORKSPACE_ROOT = path.resolve(FRAMEWORK_ROOT, '..');
@@ -559,37 +564,49 @@ function isUsableLifecycleAccessToken(token, backendBaseUrl, environment) {
   return isLoopbackBackendUrl(backendBaseUrl) || requested === 'development';
 }
 
+function readAccessTokenFromEnvFile(filePath) {
+  for (const line of fs.readFileSync(filePath, 'utf8').split(/\r?\n/u)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const separatorIndex = trimmed.indexOf('=');
+    if (separatorIndex <= 0) continue;
+    if (trimmed.slice(0, separatorIndex).trim() !== 'SDKWORK_ACCESS_TOKEN') continue;
+    let value = trimmed.slice(separatorIndex + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"'))
+      || (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (value) return value;
+  }
+  return undefined;
+}
+
+/**
+ * Read the resolved access token without the sibling credential-entry module.
+ *
+ * `ENVIRONMENT_SPEC.md` section 5.1.7 keeps credentials out of the repository,
+ * so the fallback is the user-private bundle
+ * (`~/.sdkwork/<application-code>/credentials/<profile-id>.json`) followed by
+ * the IAM registration artifact `.sdkwork.local.env`. Repositories may still
+ * contain a retired composed overlay; it is never read.
+ */
 function readLocalBootstrapAccessToken(repoRoot, environment, deploymentProfile = 'standalone') {
   const lifecycle = environment === 'dev'
     ? 'development'
     : environment === 'prod'
       ? 'production'
       : environment;
-  const candidates = [
-    path.join(repoRoot, `.env.${deploymentProfile}.${lifecycle}.bootstrap.local`),
-    path.join(repoRoot, `.env.standalone.${lifecycle}.bootstrap.local`),
-    path.join(repoRoot, `.env.${lifecycle}.bootstrap.local`),
-    path.join(repoRoot, '.sdkwork.local.env'),
-  ];
-  for (const filePath of candidates) {
-    if (!fs.existsSync(filePath)) continue;
-    for (const line of fs.readFileSync(filePath, 'utf8').split(/\r?\n/u)) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) continue;
-      const separatorIndex = trimmed.indexOf('=');
-      if (separatorIndex <= 0) continue;
-      if (trimmed.slice(0, separatorIndex).trim() !== 'SDKWORK_ACCESS_TOKEN') continue;
-      let value = trimmed.slice(separatorIndex + 1).trim();
-      if (
-        (value.startsWith('"') && value.endsWith('"'))
-        || (value.startsWith("'") && value.endsWith("'"))
-      ) {
-        value = value.slice(1, -1);
-      }
-      if (value) return value;
-    }
-  }
-  return undefined;
+  const bundleToken = readCredentialBundleToken(credentialBundlePath({
+    applicationCode: resolveApplicationCode(repoRoot),
+    profileId: `${deploymentProfile}.${lifecycle}`,
+  }));
+  if (bundleToken) return bundleToken;
+  const registeredEnvPath = path.join(repoRoot, '.sdkwork.local.env');
+  return fs.existsSync(registeredEnvPath)
+    ? readAccessTokenFromEnvFile(registeredEnvPath)
+    : undefined;
 }
 
 async function tryEnsureRegisteredBootstrapToken(repoRoot, env, environment) {
@@ -906,7 +923,8 @@ async function runDevelopment(repoRoot, packageManifest, args) {
   if (rawPlan.forbiddenProcesses.length > 0) throw new Error(`forbidden local processes: ${rawPlan.forbiddenProcesses.join(', ')}`);
   const regionEnv = resolveRegionEnv(repoRoot, runtime, args);
   const profileEnv = runtime.applyProfileEnv(activeProfileId, [process.env, runtime.loadProfile(activeProfileId), regionEnv]);
-  // Local API/worker processes require PostgreSQL credentials from `.env.postgres`
+  // Local API/worker processes require PostgreSQL credentials from
+  // `config/host/postgres.env`
   // (SDKWORK_DATABASE_URL synthesized via resolveIamDevEnv). Cloud client-only
   // profiles do not start those processes and skip the postgres merge.
   const needsLocalDatabase = (rawPlan.localProcesses ?? []).some((entry) => (

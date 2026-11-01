@@ -60,7 +60,7 @@ export function createIamDatabaseHelpers(spec) {
     if (!url) {
       throw new Error(
         options.missingDatabaseMessage
-          ?? 'IAM requires PostgreSQL for dev login. Configure .env.postgres with SDKWORK_DATABASE_* and start PostgreSQL.',
+          ?? 'IAM requires PostgreSQL for dev login. Configure config/host/postgres.env with SDKWORK_DATABASE_* and start PostgreSQL.',
       );
     }
 
@@ -83,7 +83,7 @@ export function createIamDatabaseHelpers(spec) {
   }
 
   function resolveIamDevEnv(env = process.env, repoRoot, options = {}) {
-    const postgresFile = options.postgresEnvFile ?? '.env.postgres';
+    const postgresFile = options.postgresEnvFile ?? 'config/host/postgres.env';
     if (options.ensurePostgresEnvFile !== false) {
       ensurePostgresDevEnvFile(repoRoot, {
         envFile: postgresFile,

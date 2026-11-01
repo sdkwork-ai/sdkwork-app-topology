@@ -7,7 +7,7 @@ export function normalizeText(value) {
 }
 
 export function ensurePostgresDevEnvFile(repoRoot, {
-  envFile = '.env.postgres',
+  envFile = 'config/host/postgres.env',
   stdout,
 } = {}) {
   const envFilePath = path.isAbsolute(envFile) ? envFile : path.resolve(repoRoot, envFile);

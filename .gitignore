@@ -6,13 +6,10 @@ dist/
 .env.*
 !.env.example
 !.env.*.example
-.env.local
-.env.development.local
-.env.test.local
-.env.staging.local
-.env.production.local
-.env.postgres
-.env.release.local
+
+# Host-local PostgreSQL credentials (SDKWORK_DATABASE_*) are not part of the
+# `.env.<deployment-profile>.<environment>` matrix.
+config/host/postgres.env
 
 # Local tooling and workspace state
 .mimocode/
@@ -34,7 +31,6 @@ tools/.gateway-alignment-report.json
 target/
 /target/
 **/target/
-!.env.postgres.example
 **/dist/
 coverage/
 **/.pnpm-store/

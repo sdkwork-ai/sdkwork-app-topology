@@ -296,7 +296,7 @@ export function createTopologyRuntimeV2(spec, repoRoot) {
     describeIamDatabaseTarget: iam.describeIamDatabaseTarget,
     assertPostgresReachableForIam: (env, options = {}) => iam.assertPostgresReachableForIam(env, {
       missingDatabaseMessage: spec.messages?.missingPostgres
-        ?? 'IAM requires PostgreSQL for dev login. Configure .env.postgres and start PostgreSQL.',
+        ?? 'IAM requires PostgreSQL for dev login. Configure config/host/postgres.env and start PostgreSQL.',
       unreachableDatabaseMessage: spec.messages?.unreachablePostgres,
       ...options,
     }),
